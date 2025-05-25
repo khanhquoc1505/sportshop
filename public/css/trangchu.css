@@ -13,6 +13,12 @@ body {
       padding: 1rem 2rem;
       border-bottom: 1px solid #e5e7eb;
       background-color: #f9fafb;
+      /*===============*/
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: auto;
+      z-index: 1000;
     }
 
     .header-left, .header-center, .header-right {
@@ -141,11 +147,13 @@ body {
     }
 
     .product-card {
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #ccc;
+      border-radius: 10px;
       overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-      background: white;
+      transition: box-shadow 0.2s;
     }
 
     .product-card:hover {

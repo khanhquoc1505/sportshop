@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
   <link rel="stylesheet" href="{{ asset('css/timkiem.css') }}">
   <link rel="stylesheet" href="{{ asset('css/trangchu.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/chitiet.css') }}">
 </head>
 <body>
   <header class="header-container">
@@ -24,7 +25,7 @@
       </div>
     </div>
     <div class="header-right">
-      <a href="/user" class="icon-link">👤</a>
+      <a href="{{ url('/dangnhap') }}" class="icon-link">👤</a>
       <a href="/cart" class="icon-link">🛒</a>
       <a href="/help" class="icon-link help">❓</a>
     </div>
@@ -74,6 +75,7 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="{{ asset('js/timkiem.js') }}"></script>
     <script src="{{ asset('js/trangchu.js') }}"></script>
+    <script src="{{ asset('js/chitiet.js') }}"></script>
   
 </body>
 </html>

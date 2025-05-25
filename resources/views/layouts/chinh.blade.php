@@ -30,13 +30,13 @@
 
   <main class="product-grid">
     @for ($i = 0; $i < 10; $i++)
-    <div class="product-card">
+      <a href="layouts/chitiet" class="product-card">
       <img src="https://cdn2.yame.vn/pimg/quan-jogger-cool-touch-03-0022614/149711e8-95f4-9d00-0189-001c69a79628.jpg?w=540&h=756&c=true&v=052025" alt="Product">
       <div class="product-info">
         <div class="product-title">Product Name</div>
         <div>$0</div>
       </div>
-    </div>
+    </a>
     @endfor
   </main>
 
