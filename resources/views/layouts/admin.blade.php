@@ -97,7 +97,7 @@
           </a>
         </li>
         <li>
-          <a href="#"
+          <a href="{{ route('admin.orders.index') }}"
             class="block px-3 py-2 rounded-l-full hover:bg-primary hover:text-blue-500 transition">
             Quản lý đơn hàng
           </a>
