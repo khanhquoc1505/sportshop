@@ -1,13 +1,7 @@
 @extends('home.trangchu')
 @section('title', 'Trang chủ')
 @section('content')
-  <nav class="section-deals-tabs">
-    <a href="{{ url('layouts/timkiemSP?loai=ao') }}"><button>Áo</button></a>
-    <a href="{{ url('layouts/timkiemSP?loai=quan') }}"><button>Quần</button></a>
-    <a href="{{ url('layouts/timkiemSP?loai=giay') }}"><button>Giày</button></a>
-    <a href="{{ url('layouts/timkiemSP?loai=phukien') }}"><button>Phụ kiện</button></a>
-    <a href="{{ url('layouts/timkiemSP?loai=khac') }}"><button>Khác</button></a>
-  </nav>
+  
 
   <section class="banner-carousel">
     <div class="swiper">

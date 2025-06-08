@@ -9,27 +9,75 @@
   <link rel="stylesheet" href="{{ asset('css/timkiem.css') }}">
   <link rel="stylesheet" href="{{ asset('css/trangchu.css') }}">
   <link rel="stylesheet" href="{{ asset('css/chitiet.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/giohang.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/donhang.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/ctdonhang.css') }}">
 </head>
 <body>
-  <header class="header-container">
-    <div class="header-left">
-      <a href="/" class="logo-wrapper">
-        <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="logo-image">
-      </a>
-    </div>
-    <div class="header-center">
-      <div class="search-box">
-        <span class="search-icon">🌐</span>
-        <input type="text" placeholder="Tìm kiếm" class="search-input">
-        <button class="search-button">🔍</button>
-      </div>
-    </div>
-    <div class="header-right">
-      <a href="{{ url('/dangnhap') }}" class="icon-link">👤</a>
-      <a href="/cart" class="icon-link">🛒</a>
-      <a href="/help" class="icon-link help">❓</a>
-    </div>
-  </header>
+  <!-- HEADER -->
+<header class="header-container">
+  <div class="header-left">
+    <a href="/" class="logo">
+      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="logo-image">
+    </a>
+  </div>
+  <nav class="header-nav">
+    <ul>
+      <li class="dropdown">
+        <a href="#">KHUYẾN MÃI <span class="caret">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="#">Giảm 10%</a></li>
+          <li><a href="#">Flash Sale</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#">QUẦN ÁO <span class="caret">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="{{ url('layouts/timkiemSP?loai=aothun') }}">Áo Thun</a></li>
+          <li><a href="{{ url('layouts/timkiemSP?loai=aokhoac') }}">Áo Khoác</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#">GIÀY <span class="caret">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="{{ url('layouts/timkiemSP?loai=giay_thethao') }}">Giày Thể Thao</a></li>
+          <li><a href="{{ url('layouts/timkiemSP?loai=giay_luoi') }}">Giày Lười</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#">HÃNG <span class="caret">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="{{ url('layouts/timkiemSP?loai=balo') }}">ADIDAS</a></li>
+          <li><a href="{{ url('layouts/timkiemSP?loai=mu') }}">NIKE</a></li>
+        </ul>
+      </li>
+      <li class="mobile-menu">
+        <a href="#"><span>☰</span></a>
+      </li>
+    </ul>
+  </nav>
+<!-- Search Box ở giữa -->
+  <div class="header-search">
+    <form action="{{ url('layouts/timkiemSP') }}" method="GET" class="search-form">
+      <input
+        type="text"
+        name="q"
+        class="search-input"
+        placeholder="Tìm kiếm sản phẩm..."
+        value="{{ request('q') ?? '' }}"
+      />
+      <button type="submit" class="search-btn" aria-label="Search">🔍</button>
+    </form>
+  </div>
+  <div class="header-right">
+    <a href="{{ url('/dangnhap') }}" class="icon-btn" aria-label="User">👤</a>
+    <a href="{{ url('/giohang') }}" class="icon-btn" aria-label="Cart">
+      🛒<span class="badge">1</span>
+    </a>
+  </div>
+</header>
+
+
 
   @yield('content')
 

@@ -1,0 +1,79 @@
+@extends('layouts.admin')
+
+@section('content')
+  <h1 class="text-3xl font-semibold mb-6 text-dark">Thêm danh mục</h1>
+
+  <form action="{{ route('admin.categories.store') }}"
+        method="POST"
+        class="bg-white rounded-xl shadow p-6 space-y-6">
+    @csrf
+
+    {{-- Tên danh mục --}}
+    <div>
+      <label class="block mb-1 font-medium">Tên danh mục</label>
+      <input type="text" name="name"
+             value="{{ old('name') }}"
+             class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+             placeholder="Nhập tên danh mục" required>
+      @error('name')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+      @enderror
+    </div>
+
+    {{-- Trạng thái --}}
+    <div>
+      <label class="block mb-1 font-medium">Trạng thái</label>
+      <select name="status"
+              class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+              required>
+        <option value="1" {{ old('status')==='1' ? 'selected':'' }}>Active</option>
+        <option value="0" {{ old('status')==='0' ? 'selected':'' }}>Inactive</option>
+      </select>
+      @error('status')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+      @enderror
+    </div>
+
+    {{-- Danh mục cha --}}
+    <div>
+      <label class="block mb-1 font-medium">Danh mục cha (nếu có)</label>
+      <select name="parent"
+              class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+        <option value="">-- Không --</option>
+        @foreach($parents as $p)
+          <option value="{{ $p['id'] }}"
+            {{ old('parent') == $p['id'] ? 'selected':'' }}>
+            {{ $p['name'] }}
+          </option>
+        @endforeach
+      </select>
+      @error('parent')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+      @enderror
+    </div>
+
+    {{-- Ngày tạo --}}
+    <div>
+      <label class="block mb-1 font-medium">Ngày tạo</label>
+      <input type="date" name="created_at"
+             value="{{ old('created_at', now()->format('Y-m-d')) }}"
+             class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+             required>
+      @error('created_at')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+      @enderror
+    </div>
+
+    {{-- Nút Thêm --}}
+    <div class="pt-4">
+      <button type="submit"
+              class="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">
+        Thêm danh mục
+      </button>
+      <a href="{{ route('admin.categories.index') }}"
+         class="ml-4 px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">
+        Hủy
+      </a>
+    </div>
+  </form>
+@endsection
