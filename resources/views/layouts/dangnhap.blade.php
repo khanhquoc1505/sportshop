@@ -1,20 +1,19 @@
 @extends('home.viewdangnhap')
 @section('title', 'Đăng nhập')
 @section('content')
-<form class="login-form">
-  <label for="email">Tài khoản hoặc Email</label>
-  <input type="text" id="email" placeholder="Nhập tài khoản hoặc email">
+
+  <form class="login-form" method="POST" action="{{ route('login') }}">
+  @csrf
+  <label for="login">Email hoặc Số điện thoại</label>
+  <input type="text" name="login" placeholder="Nhập email hoặc số điện thoại">
 
   <label for="password">Mật khẩu</label>
-  <input type="password" id="password" placeholder="Nhập mật khẩu">
+  <input type="password" name="mat_khau" required>
 
-  <div class="login-options">
-    <label class="remember-label"><input type="checkbox"> Ghi nhớ</label>
-    <a href="" id="forgot-link" class="forgot-link">Quên mật khẩu?</a>
-  </div>
-
-  <button type="submit" class="login-submit">Đăng nhập</button>
+  <input type="checkbox" name="remember"> Ghi nhớ
+  <button type="submit">Đăng nhập</button>
 </form>
+
 
 <!-- popup quên mật khẩu -->
 <div class="popup-overlay" id="popup-overlay"></div>

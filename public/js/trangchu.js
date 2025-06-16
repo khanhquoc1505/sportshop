@@ -25,3 +25,17 @@ const swiper = new Swiper('.swiper', {
       document.getElementById(tab.dataset.tab).classList.add('active');
     });
   });
+
+  function toggleUserMenu() {
+    const menu = document.getElementById('userDropdown');
+    menu.classList.toggle('hidden');
+}
+
+// Đóng menu nếu click ra ngoài
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('userDropdown');
+    const button = document.querySelector('.icon-btn');
+    if (!menu.contains(e.target) && !button.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});

@@ -70,7 +70,23 @@
     </form>
   </div>
   <div class="header-right">
-    <a href="{{ url('/dangnhap') }}" class="icon-btn" aria-label="User">👤</a>
+    <div class="relative inline-block">
+    <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md hidden z-50">
+        @auth
+            @if(Auth::user()->vai_tro === 'admin')
+                <a href="{{ url('/admin/dashboard') }}" class="block px-4 py-2 hover:bg-gray-100">🔧 Quản trị</a>
+            @else
+                <a href="{{ url('/donhang') }}" class="block px-4 py-2 hover:bg-gray-100">📦 Đơn hàng của tôi</a>
+            @endif
+            <form action="{{ route('logout') }}" method="POST">
+    @csrf
+    <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">🚪 Đăng xuất</button>
+</form>
+        @else
+            <a href="{{ url('/dangnhap') }}" class="icon-btn" aria-label="User">👤</a>
+        @endauth
+    </div>
+    </div>
     <a href="{{ url('/giohang') }}" class="icon-btn" aria-label="Cart">
       🛒<span class="badge">1</span>
     </a>

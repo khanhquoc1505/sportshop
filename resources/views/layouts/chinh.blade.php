@@ -23,66 +23,70 @@
   </section>
 
   <main class="product-grid">
-    @for ($i = 0; $i < 10; $i++)
-      <a href="layouts/chitiet" class="product-card">
-      <img src="https://cdn2.yame.vn/pimg/quan-jogger-cool-touch-03-0022614/149711e8-95f4-9d00-0189-001c69a79628.jpg?w=540&h=756&c=true&v=052025" alt="Product">
+  @forelse($products as $product)
+    @php
+      $imgPath = optional($product->avatarImage)->image_path
+        ? asset('images/' . $product->avatarImage->image_path)
+        : asset('images/default.jpg');
+    @endphp
+
+    <a href="{{ route('product.show', $product->id) }}" class="product-card">
+      <img 
+        src="{{ $imgPath }}" 
+        alt="{{ $product->ten }}"
+      >
       <div class="product-info">
-        <div class="product-title">Product Name</div>
-        <div>$0</div>
+        <div class="product-title">{{ $product->ten }}</div>
+        <div>{{ number_format($product->gia_ban,0,',','.') }} đ</div>
       </div>
     </a>
-    @endfor
-  </main>
+  @empty
+    <p>Chưa có sản phẩm nào.</p>
+  @endforelse
+</main>
 
 <!-- HTML Tabs + Product Slider -->
 <div class="tab-product-container">
-  <button class="tab-btn active" data-tab="adidas">adidas</button>
-  <button class="tab-btn" data-tab="nike">nike</button>
-  <button class="tab-btn" data-tab="Puma">Puma</button>
-  <button class="tab-btn" data-tab="Converse">Converse</button>
-  <button class="tab-btn" data-tab="Fila">Fila</button>
+  @foreach($bomons as $i => $bomon)
+    <button
+      class="tab-btn {{ $i === 0 ? 'active' : '' }}"
+      data-tab="{{ Str::slug($bomon->bomon, '_') }}"
+    >
+      {{ $bomon->bomon }}
+    </button>
+  @endforeach
 </div>
-<div class="tab-product-wrapper">
-  <div id="adidas" class="tab-product-content active">
-    <div class="tab-product-card">
-      <img src="LINK_VGA_IMG1" alt="">
-      <h4>tên</h4>
-      <div class="tab-product-price">7,500,000đ <span class="tab-product-old-price">7,550,000đ</span></div>
-    </div>
-    <div class="tab-product-card">
-      <img src="LINK_VGA_IMG1" alt="">
-      <h4>tên</h4>
-      <div class="tab-product-price">7,500,000đ <span class="tab-product-old-price">7,550,000đ</span></div>
-    </div>
-  </div>
-  <div id="nike" class="tab-product-content">
-    <div class="tab-product-card">
-      <img src="LINK_CPU_IMG1" alt="">
-      <h4>tên</h4>
-      <div class="tab-product-price">4,200,000đ</div>
-    </div>
-  </div>
-  <div id="Puma" class="tab-product-content">
-    <div class="tab-product-card">
-      <img src="LINK_MB_IMG1" alt="">
-      <h4>tên</h4>
-      <div class="tab-product-price">3,350,000đ</div>
-    </div>
-  </div>
-  <div id="Converse" class="tab-product-content">
-    <div class="tab-product-card">
-      <img src="LINK_RAM_IMG1" alt="">
-      <h4>tên</h4>
-      <div class="tab-product-price">1,150,000đ</div>
-    </div>
-  </div>
 
-  <div id="Fila" class="tab-product-content">
-    <div class="tab-product-card">
-      <img src="LINK_SSD_IMG1" alt="">
-      <h4>Tên</h4>
-      <div class="tab-product-price">1,550,000đ</div>
+<div class="tab-product-wrapper">
+  @foreach($bomons as $i => $bomon)
+    <div
+      id="{{ Str::slug($bomon->bomon, '_') }}"
+      class="tab-product-content {{ $i === 0 ? 'active' : '' }}"
+    >
+      @forelse($bomon->sanPhams as $product)
+        @php
+          // Lấy ảnh đại diện variant đầu tiên, fallback ảnh default nếu null
+          $avatar = optional($product->avatarImage)->image_path;
+          $imgUrl = $avatar
+            ? asset('images/' . $avatar)
+            : asset('images/default.jpg');
+        @endphp
+
+        <div class="tab-product-card">
+          <img
+            src="{{ $imgUrl }}"
+            alt="{{ $product->ten }}"
+          >
+          <h4>{{ $product->ten }}</h4>
+          <div class="tab-product-price">
+            {{ number_format($product->gia_ban,0,',','.') }}đ
+          </div>
+        </div>
+      @empty
+        <p>Chưa có sản phẩm nào.</p>
+      @endforelse
     </div>
-  </div>
+  @endforeach
 </div>
+
 @endsection

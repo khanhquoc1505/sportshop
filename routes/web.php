@@ -2,20 +2,42 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ChiTietController;
+use App\Models\SanPham;
+use App\Models\BoMon;
 
 
 Route::get('/', function () {
     return view('home/trangchu');
 });
+
 Route::get('/', function () {
-    return view('layouts/chinh');
+    $products = SanPham::all();
+    $bomons = BoMon::with('sanPhams')->get();
+    return view('layouts.chinh', compact('products','bomons'));
+})->name('layouts.chinh');
+
+Route::get('chitiet/{id}', [ChiTietController::class, 'show'])->name('product.show');
+Route::post('/cart/add/{product}', [ChiTietController::class, 'add'])->name('cart.add');
+Route::middleware('auth')->group(function(){
+    Route::post('/wishlist/toggle/{product}', [ChiTietController::class, 'toggle'])->name('wishlist.toggle');
 });
+Route::get('product/{id}/mo-ta', [ChiTietController::class, 'moTa'])
+     ->name('product.mo_ta');
+////////////////////////////////////////////////////////////////////////
+Route::get('/dangky', [HomeController::class, 'showRegisterForm'])->name('dangky.form');
+Route::post('/dangky', [HomeController::class, 'dangky'])->name('dangky');
+
+Route::get('/dangnhap', [HomeController::class, 'showLoginForm'])->name('login');
+Route::post('/dangnhap', [HomeController::class, 'login'])->name('login');
+
+Route::post('/dang-xuat', [HomeController::class, 'logout'])->name('logout');
+////////////////////////////////////////////////////////////////////////
 Route::get('layouts/timkiemSP', function () {
     return view('layouts/timkiemSP');
 });
-Route::get('layouts/chitiet', function () {
-    return view('layouts/chitiet');
-});
+
 Route::get('/dangnhap', function () {
     return view('layouts.dangnhap');
 });

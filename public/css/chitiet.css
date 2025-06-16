@@ -104,7 +104,31 @@
   transition: border 0.2s ease;
 }
 .ct-color-options img:hover {
-  border-color: #3b82f6;
+  border-color: #1763dc;
+}
+.ct-color-options {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 1em;
+}
+.color-swatch {
+  width: 24px;
+  height: 24px;
+ 
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color .2s, transform .2s;
+}
+.color-swatch:hover {
+  border-color: #999;
+}
+.color-swatch.active {
+  border-color: #333;
+  transform: scale(1.2);
+}
+.ct-size-options button.active {
+  background-color: #333;
+  color: #fff;
 }
 
 .ct-size-options button {
