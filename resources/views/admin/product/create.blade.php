@@ -45,10 +45,10 @@
                 <input type="text" name="color" class="w-full border px-3 py-2 rounded" placeholder="Nhập màu sản phẩm">
             </div>
 
-            {{-- Thương hiệu --}}
+            {{-- Bộ môn --}}
             <div>
-                <label class="block text-sm font-medium mb-1">Thương hiệu</label>
-                <input type="text" name="brand" class="w-full border px-3 py-2 rounded" placeholder="Nhập thương hiệu">
+                <label class="block text-sm font-medium mb-1">Bộ Môn</label>
+                <input type="text" name="brand" class="w-full border px-3 py-2 rounded" placeholder="Nhập bộ môn">
             </div>
         </div>
 

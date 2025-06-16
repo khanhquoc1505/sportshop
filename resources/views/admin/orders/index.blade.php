@@ -79,17 +79,63 @@
 
             {{-- Trạng thái Giao --}}
             <td class="px-4 py-2">
-              @if($o['delivery_status'] === 'pending')
-                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ giao</span>
-              @elseif($o['delivery_status'] === 'shipping')
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang giao</span>
-              @elseif($o['delivery_status'] === 'delivered')
-                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã giao</span>
-              @else
-                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Trả về</span>
-              @endif
-            </td>
+              @switch($o['delivery_status'])
+                {{-- Chờ giao --}}
+                @case('pending')
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                    Chờ giao hàng
+                  </span>
+                  @break
 
+                {{-- Chờ lấy hàng --}}
+                @case('waiting_pickup')
+                  <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                    Chờ lấy hàng
+                  </span>
+                  @break
+
+                {{-- Đang giao --}}
+                @case('shipping')
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    Đang giao hàng
+                  </span>
+                  @break
+
+                {{-- Đã giao --}}
+                @case('delivered')
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    Đã giao hàng
+                  </span>
+                  @break
+
+                {{-- Trả hàng --}}
+                @case('returned')
+                  <span class="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-sm">
+                    Trả hàng
+                  </span>
+                  @break
+
+                {{-- Hủy giao hàng --}}
+                @case('canceled')
+                  <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                    Hủy giao hàng
+                  </span>
+                  @break
+
+                {{-- Chưa hoàn thành --}}
+                @case('incomplete')
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                    Chưa hoàn thành
+                  </span>
+                  @break
+
+                {{-- Mặc định --}}
+                @default
+                  <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full text-sm">
+                    Không xác định
+                  </span>
+              @endswitch
+            </td>
             {{-- Tổng tiền (VNĐ) --}}
             <td class="px-4 py-2">
               {{ number_format($o['total_amount'], 0, ',', '.') }}
