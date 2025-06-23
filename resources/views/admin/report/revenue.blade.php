@@ -71,8 +71,29 @@
             </div>
 
             {{-- Khu vực hiển thị báo cáo --}}
-            <div class="h-64 bg-white rounded-lg shadow flex items-center justify-center text-gray-400">
-                Nội dung báo cáo ở đây
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto bg-white rounded-lg shadow">
+                    <thead class="bg-gray-100 text-gray-700 text-center">
+                        <tr>
+                            <th class="px-4 py-2">Ngày</th>
+                            <th class="px-4 py-2">Số đơn</th>
+                            <th class="px-4 py-2">Tổng doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @forelse ($data as $row)
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($row->ngay)->format('d/m/Y') }}</td>
+                                <td class="px-4 py-2">{{ $row->so_don }}</td>
+                                <td class="px-4 py-2 text-green-700 font-semibold">{{ number_format($row->tong_doanhthu, 0, ',', '.') }} ₫</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="py-4 text-gray-500">Chưa có dữ liệu</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -1,0 +1,210 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5f5f5;
+}
+
+.login-header {
+     display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #f9fafb;
+      /*===============*/
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: auto;
+      z-index: 1000;
+}
+
+.header-left {
+  flex: 1;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+}
+.header-center,
+.header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-home {
+  width: 70px;
+  height: 40px;
+  
+}
+.logo-home img {
+  width: 70px;
+  height: 40px;
+}
+
+.home-icon {
+  width: 70px;
+  height: 40px;
+}
+.home-icon i {
+  font-size: 40px;
+}
+ 
+.logo-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.login-container {
+  display: flex;
+  min-height: 90vh;
+}
+
+.login-left,
+.login-right {
+  flex: 1;
+}
+
+.login-left {
+  background-color: #f45eef;
+  display: flex;
+  justify-content: center;
+  min-height: 95vh;
+  padding-top: 1rem;
+}
+
+.login-left img {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 8px;
+  height: 100%;
+  max-height: 650px;
+  
+}
+
+.login-right {
+  background-color:#f45eef;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* để phần đầu giữ nguyên */
+  align-items: center;         /* căn giữa theo chiều ngang */
+  min-height: 95vh;           /* chiếm toàn bộ chiều cao màn hình */
+
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+
+.login-form h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.login-form label {
+  display: block;
+  margin: 1rem 0 0.3rem;
+  font-weight: 500;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 10px;
+  background-color: #111;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.login-form button:hover {
+  background-color: #333;
+}
+
+.login-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.login-links a {
+  font-size: 0.9rem;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.login-links a:hover {
+  text-decoration: underline;
+}
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.login-options input {
+  margin-right: 0.4rem;
+}
+
+.forgot-link {
+  color: #0d0808;
+  text-decoration: underline;
+}
+
+.login-submit {
+  background-color: #f3b237;
+  color: #fff;
+  padding: 0.75rem;
+  border: none;
+  width: 100%;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.login-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+}
+.login-toggle a {
+  color: #555;
+  text-decoration: none;
+  font-weight: bold;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+}
+.login-toggle a.active {
+  color: #000;
+  border-color: #f3b237;
+}
+.remember-label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+

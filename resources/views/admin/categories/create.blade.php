@@ -9,16 +9,17 @@
     @csrf
 
     {{-- Tên danh mục --}}
-    <div>
-      <label class="block mb-1 font-medium">Tên danh mục</label>
-      <input type="text" name="name"
-             value="{{ old('name') }}"
-             class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-             placeholder="Nhập tên danh mục" required>
-      @error('name')
-        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-      @enderror
-    </div>
+   <div>
+    <label class="block mb-1 font-medium">Tên danh mục</label>
+    <input type="text"
+           name="loai"
+           value="{{ old('loai') }}"
+           class="w-full border px-4 py-2 rounded focus:ring-2 focus:ring-primary"
+           placeholder="Nhập tên danh mục" required>
+    @error('loai')
+      <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
+  </div>
 
     {{-- Trạng thái --}}
     <div>
@@ -30,24 +31,6 @@
         <option value="0" {{ old('status')==='0' ? 'selected':'' }}>Inactive</option>
       </select>
       @error('status')
-        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-      @enderror
-    </div>
-
-    {{-- Danh mục cha --}}
-    <div>
-      <label class="block mb-1 font-medium">Danh mục cha (nếu có)</label>
-      <select name="parent"
-              class="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary">
-        <option value="">-- Không --</option>
-        @foreach($parents as $p)
-          <option value="{{ $p['id'] }}"
-            {{ old('parent') == $p['id'] ? 'selected':'' }}>
-            {{ $p['name'] }}
-          </option>
-        @endforeach
-      </select>
-      @error('parent')
         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
       @enderror
     </div>
