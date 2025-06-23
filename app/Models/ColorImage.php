@@ -10,6 +10,7 @@ class ColorImage extends Model
     use HasFactory;
 
     protected $table = 'color_images'; // Tên bảng trong database
+    public $timestamps = false;
 
     protected $fillable = [
         'sanpham_id',

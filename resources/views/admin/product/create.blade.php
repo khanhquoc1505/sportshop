@@ -16,7 +16,7 @@
             {{-- Hình ảnh --}}
             <div>
                 <label class="block text-sm font-medium mb-1">Hình ảnh</label>
-                <input type="file" name="image" class="w-full border px-3 py-2 rounded">
+                <input type="file" name="images[]" id="images" class="w-full border px-3 py-2 rounded">
             </div>
 
             {{-- Size --}}
@@ -33,6 +33,11 @@
 
         <div class="grid grid-cols-3 gap-6">
 
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Giá nhập</label>
+                <input type="number" name="gia_nhap" id="gia_nhap" class="w-full border px-3 py-2 rounded" placeholder="Nhập giá nhập">
+            </div>
+
             {{-- Giá bán --}}
             <div>
                 <label class="block text-sm font-medium mb-1">Giá bán</label>
@@ -45,10 +50,10 @@
                 <input type="text" name="color" class="w-full border px-3 py-2 rounded" placeholder="Nhập màu sản phẩm">
             </div>
 
-            {{-- Thương hiệu --}}
+            {{-- Bộ môn --}}
             <div>
-                <label class="block text-sm font-medium mb-1">Thương hiệu</label>
-                <input type="text" name="brand" class="w-full border px-3 py-2 rounded" placeholder="Nhập thương hiệu">
+                <label class="block text-sm font-medium mb-1">Bộ Môn</label>
+                <input type="text" name="brand" class="w-full border px-3 py-2 rounded" placeholder="Nhập bộ môn">
             </div>
         </div>
 

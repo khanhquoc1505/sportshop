@@ -4,20 +4,17 @@
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý Đơn hàng</h1>
 
   {{-- -------------------- Search & Filter -------------------- --}}
-  <form method="GET" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    {{-- Tìm kiếm --}}
-    <div class="col-span-1 md:col-span-2">
-      <input
-        type="text"
-        name="search"
-        value="{{ old('search', $search) }}"
-        placeholder="Tìm kiếm mã đơn hoặc tên khách"
-        class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
-      />
-    </div>
-  </form>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <input
+      id="orderSearch"
+      type="text"
+      value="{{ old('search', $search ?? '') }}"
+      placeholder="Tìm kiếm mã đơn hoặc tên khách"
+      class="col-span-1 md:col-span-2 w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+    />
+  </div>
 
-{{-- -------------------- Bảng Đơn hàng -------------------- --}}
+  {{-- -------------------- Bảng Đơn hàng -------------------- --}}
   <div class="bg-white rounded-xl shadow p-6 w-full overflow-auto border border-gray-300">
     <table id="ordersTable" class="w-full table-auto">
       <thead>
@@ -34,13 +31,13 @@
         </tr>
       </thead>
       <tbody>
-        @foreach($orders as $o)
+        @forelse($orders as $o)
           <tr class="border-b text-center">
-            {{-- Mã Đơn (click vào sẽ chuyển trang chi tiết) --}}
+            {{-- Mã Đơn --}}
             <td class="px-4 py-2 text-left">
               <a href="{{ route('admin.orders.show', $o['id']) }}"
                  class="text-blue-600 hover:underline">
-                {{ $o['id'] }}
+                {{ $o['madon'] }}
               </a>
             </td>
 
@@ -54,72 +51,119 @@
 
             {{-- Thanh toán --}}
             <td class="px-4 py-2">
-              @if($o['payment_status'] === 'paid')
-                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
-              @else
-                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Chưa thanh toán</span>
-              @endif
+              @switch($o['trangthai'])
+                @case(2)
+                  <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Chưa thanh toán</span>
+                  @break
+                @case(3)
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đang hoàn tiền</span>
+                  @break
+                @case(4)
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đã hoàn tiền</span>
+                  @break
+                @case(5)
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
+                  @break
+                @default
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
+              @endswitch
             </td>
 
             {{-- Trạng thái Đơn --}}
             <td class="px-4 py-2">
-              @if($o['order_status'] === 'pending')
-                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ xác nhận</span>
-              @elseif($o['order_status'] === 'processing')
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang xử lý</span>
-              @elseif($o['order_status'] === 'completed')
-                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Hoàn thành</span>
-              @else
-                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Đã hủy</span>
-              @endif
+              @switch($o['order_status'])
+                @case('dadathang')
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đã đặt hàng</span>
+                  @break
+                @case('daduyet')
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang xử lý</span>
+                  @break
+                @case('hoanthanh')
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Hoàn thành</span>
+                  @break
+                @case('dahuy')
+                  <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Đã hủy</span>
+                  @break
+                @default
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
+              @endswitch
             </td>
 
             {{-- Hình thức Giao hàng --}}
-            <td class="px-4 py-2">{{ $o['shipping_method'] }}</td>
+            <td class="px-4 py-2 text-capitalize">
+              {{ $o['shipping_method_label'] }}
+            </td>
 
             {{-- Trạng thái Giao --}}
             <td class="px-4 py-2">
-              @if($o['delivery_status'] === 'pending')
-                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ giao</span>
-              @elseif($o['delivery_status'] === 'shipping')
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang giao</span>
-              @elseif($o['delivery_status'] === 'delivered')
-                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã giao</span>
-              @else
-                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Trả về</span>
-              @endif
+              @switch($o['delivery_status'])
+                @case('pending')
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ giao hàng</span>
+                  @break
+                @case('waiting_pickup')
+                  <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">Chờ lấy hàng</span>
+                  @break
+                @case('shipping')
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang giao hàng</span>
+                  @break
+                @case('delivered')
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã giao hàng</span>
+                  @break
+                @case('returned')
+                  <span class="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-sm">Trả hàng</span>
+                  @break
+                @case('canceled')
+                  <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Hủy giao hàng</span>
+                  @break
+                @case('incomplete')
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Chưa hoàn thành</span>
+                  @break
+                @default
+                  <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full text-sm">Không xác định</span>
+              @endswitch
             </td>
 
-            {{-- Tổng tiền (VNĐ) --}}
+            {{-- Tổng tiền --}}
             <td class="px-4 py-2">
               {{ number_format($o['total_amount'], 0, ',', '.') }}
             </td>
 
             {{-- Xóa --}}
-            <td class="px-4 py-2">
-              <form action="{{ route('admin.orders.destroy', $o['id']) }}"
-                    method="POST"
-                    onsubmit="return confirm('Xác nhận xóa đơn hàng này?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+            <td class="px-4 py-2 text-center">
+              @php
+                $canDelete = $o['order_status'] === 'dahuy'
+                             && in_array($o['trangthai'], [2, 4]);
+              @endphp
+
+              @if($canDelete)
+                <form action="{{ route('admin.orders.destroy', $o['id']) }}"
+                      method="POST"
+                      onsubmit="return confirm('Xác nhận xóa đơn hàng này?')">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit"
+                          class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                    Xóa
+                  </button>
+                </form>
+              @else
+                <button type="button"
+                        disabled
+                        class="px-3 py-1 bg-gray-300 text-gray-500 rounded cursor-not-allowed">
                   Xóa
                 </button>
-              </form>
+              @endif
             </td>
           </tr>
-        @endforeach
-
-        @if($orders->isEmpty())
+        @empty
           <tr>
             <td colspan="9" class="py-6 text-center text-gray-500">Chưa có đơn hàng nào</td>
           </tr>
-        @endif
+        @endforelse
       </tbody>
     </table>
 
-    {{-- Pagination --}}
+    {{-- Phân trang --}}
     <div class="mt-4">
       {{ $orders->links() }}
     </div>
@@ -128,29 +172,27 @@
 
 @push('scripts')
 <script>
-  // Tìm kiếm live: so khớp mã đơn hoặc tên khách
-  (function() {
-    const input = document.querySelector('input[name="search"]');
-    if (!input) return;
-    const rows = document.querySelectorAll('#ordersTable tbody tr');
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('orderSearch');
+    const rows  = document.querySelectorAll('#ordersTable tbody tr');
 
     function stripDiacritics(str) {
       return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     }
 
-    function filterRows() {
-      const qNorm = stripDiacritics(input.value.trim());
+    input.addEventListener('input', () => {
+      const q = stripDiacritics(input.value.trim());
       rows.forEach(tr => {
-        // cột 0 = Mã Đơn, cột 2 = Khách hàng (vì cột 1 là Ngày Tạo)
         const idText   = tr.cells[0].textContent.trim();
         const nameText = tr.cells[2].textContent.trim();
-        const textNorm = stripDiacritics(idText + ' ' + nameText);
-        tr.style.display = (!qNorm || textNorm.includes(qNorm)) ? '' : 'none';
+        tr.style.display = (!q || stripDiacritics(idText + ' ' + nameText).includes(q))
+                            ? '' : 'none';
       });
-    }
+    });
 
-    input.addEventListener('input', filterRows);
-    filterRows();
-  })();
+    if (input.value) {
+      input.dispatchEvent(new Event('input'));
+    }
+  });
 </script>
 @endpush

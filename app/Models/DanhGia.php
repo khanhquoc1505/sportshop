@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DanhGia extends Model
 {
     protected $table = 'danhgia';
+
     public $timestamps = false;  // bảng không có created_at/updated_at
 
     protected $fillable = [
@@ -18,6 +19,7 @@ class DanhGia extends Model
         'hinh_anh',
         'ngaydanhgia',
         'is_replied',
+        'trang_thai',
         'reply',
     ];
 

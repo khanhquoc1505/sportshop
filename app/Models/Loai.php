@@ -14,4 +14,5 @@ class Loai extends Model
     {
         return $this->hasMany(LoaiSanPham::class, 'loai_id');
     }
+    
 }

@@ -1,6 +1,22 @@
 @extends('layouts.admin')
 
 @section('content')
+    @if (session('success'))
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '{{ session('success') }}',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                });
+            </script>
+        @endpush
+    @endif
     <h1 class="text-3xl font-semibold mb-6 text-dark">Quản Lý Danh Mục</h1>
 
     {{-- Search & Filter giống User --}}
@@ -23,8 +39,8 @@
                     <th class="px-4 py-2">ID</th>
                     <th class="px-4 py-2">Tên Danh Mục</th>
                     <th class="px-4 py-2">Trạng Thái</th>
-                    <th class="px-4 py-2">Danh Mục Cha</th>
                     <th class="px-4 py-2">Ngày Tạo</th>
+                    <th class="px-4 py-2">Ngày Cập Nhật</th>
                     <th class="px-4 py-2">Hành Động</th>
                 </tr>
             </thead>
@@ -32,7 +48,7 @@
                 @foreach($categories as $c)
                     <tr class="border-b text-center">
                         <td class="px-4 py-2 id">{{ $c['id'] }}</td>
-                        <td class="px-4 py-2 name">{{ $c['name'] }}</td>
+                        <td class="px-4 py-2 name">{{ $c->loai }}</td>
                         <td class="px-4 py-2 status">
                             @if($c['status'])
                                 <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
@@ -40,19 +56,17 @@
                                 <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Inactive</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2 parent">
-                            @if($c['parent'])
-                                        {{ collect(session('admin_categories'))
-                                ->firstWhere('id', $c['parent'])['name'] ?? '-' }}
-                            @else
-                                -
-                            @endif
+                        <td class="px-4 py-2">
+                            {{ \Carbon\Carbon::parse($c['created_at'])->format('Y/m/d') }}
                         </td>
-                        <td class="px-4 py-2">{{ $c['created_at'] }}</td>
+                        <td class="px-4 py-2">
+                            {{ \Carbon\Carbon::parse($c->updated_at)->format('Y/m/d') }}
+                        </td>
                         <td class="px-4 py-2 space-x-2">
                             <a href="{{ route('admin.categories.edit', ['id' => $c['id']]) }}"
                                 class="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">Sửa</a>
-                            <form action="{{ route('admin.categories.destroy', $c['id']) }}" method="POST" class="inline" onsubmit="return confirm('Xác nhận xóa danh mục này?')">
+                            <form action="{{ route('admin.categories.destroy', $c['id']) }}" method="POST" class="inline"
+                                onsubmit="return confirm('Xác nhận xóa danh mục này?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
                                     Xóa

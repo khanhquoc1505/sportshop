@@ -1,28 +1,35 @@
 @extends('layouts.admin')
 
 @section('content')
+@if (session('success'))
+  @push('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+          icon: 'success',
+          title: '{{ session('success') }}',
+          showConfirmButton: false,
+          timer: 2000,
+          toast: true,
+          position: 'top-end'
+        });
+      });
+    </script>
+  @endpush
+@endif
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý người dùng</h1>
 
-  {{-- Search & Filters --}}
-  <div class="flex items-center space-x-2 mb-4">
-    <input id="searchInput" type="text" placeholder="Tìm kiếm ID, tên hoặc email"
-    class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary" />
-
-    <select id="statusSelect" class="px-4 py-2 border rounded">
-    <option value="">-- Trạng thái --</option>
-    <option value="active">Active</option>
-    <option value="inactive">Inactive</option>
-    </select>
-
-    <select id="roleSelect" class="px-4 py-2 border rounded">
-    <option value="">-- Vai trò --</option>
-    <option value="admin">Admin</option>
-    <option value="customer">Customer</option>
-    </select>
+  {{-- Tìm kiếm --}}
+  <div class="mb-4">
+    <input type="text" id="searchInput" placeholder="Nhập tên người dùng..."class="mb-4 px-4 py-2 border border-gray-300 rounded w-1/3 focus:outline-none focus:ring">
+    <a href="{{ route('admin.users.create') }}"
+   class="px-4 py-2 mb-4 inline-block bg-blue-500 text-white rounded hover:bg-blue-600">
+   + Thêm người dùng
+</a>
   </div>
 
   {{-- Table --}}
-  <div class="bg-white rounded-xl shadow p-8 w-full overflow-auto shadow border border-gray-300">
+  <div class="bg-white rounded-xl shadow p-8 w-full overflow-auto border border-gray-300">
     <table id="usersTable" class="w-full table-auto">
     <thead>
       <tr class="bg-gray-200 text-gray-700 text-center">
@@ -30,43 +37,49 @@
       <th class="px-4 py-2">Tên</th>
       <th class="px-4 py-2">Email</th>
       <th class="px-4 py-2">SĐT</th>
+      <th class="px-4 py-2">Địa chỉ</th>
       <th class="px-4 py-2">Vai trò</th>
-      <th class="px-4 py-2">Trạng thái</th>
+      <th class="px-4 py-2">Mật khẩu</th>
+      <th class="px-4 py-2">Ngày tạo</th>
+      <th class="px-4 py-2">Cập nhật</th>
       <th class="px-4 py-2">Hành động</th>
       </tr>
     </thead>
     <tbody>
       @foreach($users as $u)
       <tr class="border-b text-center">
-      <td class="px-4 py-2 id">{{ $u['id'] }}</td>
-      <td class="px-4 py-2 name">{{ $u['name'] }}</td>
-      <td class="px-4 py-2 email">{{ $u['email'] }}</td>
-      <td class="px-4 py-2 phone">{{ $u['phone'] }}</td>
-      <td class="px-4 py-2 role">
+      <td class="px-4 py-2">{{ $u['id'] }}</td>
+      <td class="px-4 py-2 name">{{ $u['ten_nguoi_dung'] }}</td>
+      <td class="px-4 py-2">{{ $u['email'] }}</td>
+      <td class="px-4 py-2">{{ $u['sdt'] }}</td>
+      <td class="px-4 py-2">{{ $u['dia_chi'] }}</td>
+      <td class="px-4 py-2">
       <span class="px-2 py-1 rounded-full text-sm
-       {{ $u['role'] == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-      {{ ucfirst($u['role']) }}
+        {{ $u['vai_tro'] == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+      {{ ucfirst($u['vai_tro']) }}
       </span>
       </td>
-      <td class="px-4 py-2 status">
-      @if($u['is_active'])
-      <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
-      @else
-      <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Inactive</span>
-      @endif
+      <td class="px-4 py-2">{{ $u['mat_khau'] }}</td>
+      <td class="px-4 py-2 text-sm">
+      {{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y H:i') }}
       </td>
-      <td class="px-4 py-2 space-x-2">
-      <a href="{{ route('admin.users.edit', $u['id']) }}"
-      class="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">
-      Sửa
+      <td class="px-4 py-2 text-sm">
+      {{ \Carbon\Carbon::parse($u['updated_at'])->format('d/m/Y H:i') }}
+      </td>
+      <td class="px-4 py-2">
+      <div class="flex justify-center space-x-2">
+      <a href="{{ route('admin.users.edit', $u->id) }}"
+        class="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">
+        Sửa
       </a>
-      <form action="{{ route('admin.users.destroy', $u['id']) }}" method="POST" class="inline"
-      onsubmit="return confirm('Xác nhận xóa user này?')">
-      @csrf @method('DELETE')
-      <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+      <form action="{{ route('admin.users.destroy', $u->id) }}" method="POST"
+        onsubmit="return confirm('Xác nhận xóa user này?')">
+        @csrf @method('DELETE')
+        <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
         Xóa
-      </button>
+        </button>
       </form>
+      </div>
       </td>
       </tr>
     @endforeach
@@ -77,51 +90,30 @@
 
 @push('scripts')
   <script>
+    // Ẩn thông báo sau 3 giây
+  document.addEventListener('DOMContentLoaded', () => {
+    const alert = document.querySelector('.bg-green-100');
+    if (alert) {
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 3000);
+    }
+  });
     (() => {
     const input = document.getElementById('searchInput');
-    const status = document.getElementById('statusSelect');
-    const role = document.getElementById('roleSelect');
     const rows = document.querySelectorAll('#usersTable tbody tr');
 
-    function filterRows() {
-      const q = input.value.trim().toLowerCase();
-      const stVal = status.value;   // "" / "active" / "inactive"
-      const rlVal = role.value;     // "" / "admin" / "customer"
+    input.addEventListener('input', function () {
+      const query = this.value.trim().toLowerCase();
 
-      rows.forEach(tr => {
-      // Lấy text của từng cell qua class
-      const id = tr.querySelector('.id').textContent.trim().toLowerCase();
-      const name = tr.querySelector('.name').textContent.trim().toLowerCase();
-      const email = tr.querySelector('.email').textContent.trim().toLowerCase();
-      const rl = tr.querySelector('.role').textContent.trim().toLowerCase();
-      const st = tr.querySelector('.status').textContent.trim().toLowerCase();
+      rows.forEach(row => {
+      const nameCell = row.querySelector('.name');
+      if (!nameCell) return;
 
-      const matchText = !q
-        || id.includes(q)
-        || name.includes(q)
-        || email.includes(q);
-
-      const matchStatus = !stVal
-        || (stVal === 'active' && st === 'active')
-        || (stVal === 'inactive' && st === 'inactive');
-
-      const matchRole = !rlVal
-        || (rlVal === 'admin' && rl === 'admin')
-        || (rlVal === 'customer' && rl === 'customer');
-
-      tr.style.display = (matchText && matchStatus && matchRole)
-        ? ''
-        : 'none';
+      const name = nameCell.innerText.replace(/\s+/g, ' ').toLowerCase();
+      row.style.display = name.includes(query) ? '' : 'none';
       });
-    }
-
-    // Gọi 1 lần lúc load
-    filterRows();
-
-    // Gán sự kiện
-    input.addEventListener('input', filterRows);
-    status.addEventListener('change', filterRows);
-    role.addEventListener('change', filterRows);
+    });
     })();
   </script>
 @endpush

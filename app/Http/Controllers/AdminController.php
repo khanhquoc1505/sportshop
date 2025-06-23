@@ -3,11 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\RevenueExport;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
-
+use App\Exports\RevenueExport;
+use Illuminate\Support\Facades\DB;
+use App\Models\SanPham;
+use App\Models\NguoiDung;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Loai;
+use App\Models\DonHang;
+use App\Models\Voucher;
+use App\Models\Comment;
+use App\Models\NhapKho;
+use App\Models\ImgSanPham;
+use App\Models\KichCo;
+use App\Models\MauSac;
+use App\Models\Feedback;
 
 class AdminController extends Controller
 {
@@ -15,216 +27,511 @@ class AdminController extends Controller
     {
         return view('admin.dashboard');
     }
-    public function product()
-    {
-        // Lấy dữ liệu từ DB, hoặc giả lập
-        // $items = Warehouse::all();
-        $items = [
-            (object) ['id' => 1, 'name' => 'Sản phẩm A', 'image' => 'images/a.png', 'time' => '2025-05-24', 'qty' => 10],
-            (object) ['id' => 2, 'name' => 'Sản phẩm B', 'image' => 'images/b.png', 'time' => '2025-05-23', 'qty' => 5],
-        ];
 
-        return view('admin.product.index', compact('items'));
+    public function product()
+{
+    $items = SanPham::with(['variants.kichCo', 'variants.mauSac', 'images'])->get();
+
+    foreach ($items as $item) {
+        $item->so_luong = $item->variants->sum('sl');  // tổng số lượng
     }
+
+    return view('admin.product.index', compact('items'));
+}
+
     public function productEdit($id)
     {
-        // Nếu có Model: $item = Warehouse::findOrFail($id);
-        // Tạm giả dữ liệu:
-        $items = [
-            (object) ['id' => 1, 'name' => 'SP A', 'image' => 'images/a.png', 'time' => '2025-05-24', 'qty' => 10],
-            (object) ['id' => 2, 'name' => 'SP B', 'image' => 'images/b.png', 'time' => '2025-05-23', 'qty' => 5],
-        ];
-        $item = collect($items)->firstWhere('id', $id);
-
-        return view('admin.product.edit', compact('item'));
+        $item = SanPham::findOrFail($id);
+        // Lấy danh sách kích cỡ và màu sắc
+        $kichcoList = KichCo::all();
+        $mausacList = MauSac::all();
+        $tongSoLuong = $item->variants->sum('sl');
+        return view('admin.product.edit', compact('item', 'kichcoList', 'mausacList', 'tongSoLuong'));
     }
     public function productUpdate(Request $request, $id)
-    {
-        // $data = $request->validate([
-        //   'name' => 'required|string',
-        //   'image' => 'nullable|image',
-        //   'time' => 'required|date',
-        //   'qty'  => 'required|integer',
-        // ]);
-        //
-        // $item = Warehouse::findOrFail($id);
-        // if($request->hasFile('image')){
-        //   $path = $request->file('image')->store('images','public');
-        //   $data['image'] = 'storage/'.$path;
-        // }
-        // $item->update($data);
+{
+    $product = SanPham::findOrFail($id);
 
-        // tạm redirect về index
-        return redirect()->route('admin.product.index')
-            ->with('success', 'Cập nhật thành công');
-    }
-    public function productCreate()
-    {
-        return view('admin.product.create');
-    }
-    public function productStore(Request $request)
-    {
-        // Validate (tuỳ bạn)
-        $data = $request->validate([
-            'name' => 'required|string',
-            'time' => 'required|date',
-            'qty' => 'required|integer',
-            'image' => 'nullable|image',
-            'size' => 'nullable|string',
-            'price' => 'nullable|numeric',
-            'brand' => 'nullable|string',
-            'category' => 'nullable|string',
-            'description' => 'nullable|string',
-        ]);
+    $product->ten = $request->ten;
+    $product->mo_ta = $request->mo_ta;
+    $product->gia_ban = $request->gia_ban;
+    $product->thoi_gian_them = $request->thoi_gian_them;
+    $product->trang_thai = $request->trang_thai;
 
-        // Lấy mảng hiện tại từ session/demo
-        $items = $this->getItems();  // nếu bạn đang dùng session như ví dụ trước
-
-        // Tự sinh ID tiếp theo
-        $maxId = collect($items)->max('id');
-        $newId = $maxId + 1;
-
-        // Xử lý ảnh nếu có upload
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
-            $data['image'] = 'storage/' . $path;
-        } else {
-            $data['image'] = null; // hoặc mặc định
-        }
-
-        // Thêm trường id và qty kiểu int
-        $newItem = array_merge([
-            'id' => $newId,
-            'qty' => (int) $data['qty'],
-        ], $data);
-
-        // Đẩy vào mảng và lưu session
-        $items[] = $newItem;
-        session(['product_items' => $items]);
-
-        return redirect()
-            ->route('admin.product.index')
-            ->with('success', "Đã thêm sản phẩm #{$newId}");
-    }
-    private $initialUsers = [
-        ['id' => 1, 'name' => 'Nguyễn Văn A', 'email' => 'a@test.com', 'phone' => '0123456789', 'role' => 'admin', 'is_active' => 1],
-        ['id' => 2, 'name' => 'Trần Thị B', 'email' => 'b@test.com', 'phone' => '0987654321', 'role' => 'customer', 'is_active' => 0],
-        ['id' => 3, 'name' => 'Lê Văn C', 'email' => 'c@test.com', 'phone' => '0112233445', 'role' => 'customer', 'is_active' => 1],
-    ];
-
-    // Lấy mảng users từ session, khởi tạo lần đầu
-    private function getUsers()
-    {
-        if (!session()->has('admin_users')) {
-            session(['admin_users' => $this->initialUsers]);
-        }
-        return session('admin_users');
+    if ($request->hasFile('hinh_anh')) {
+        $filename = time() . '.' . $request->hinh_anh->extension();
+        $request->hinh_anh->move(public_path('images'), $filename);
+        $product->hinh_anh = $filename;
     }
 
-    // Ghi mảng users vào session
-    private function saveUsers(array $users)
-    {
-        session(['admin_users' => $users]);
-    }
+    $product->save();
 
-    /** 1) Hiển thị danh sách user */
+    return redirect()->route('admin.product.index')->with('success', 'Cập nhật sản phẩm thành công!');
+}
+
     public function users(Request $request)
     {
-        $users = collect($this->getUsers());
+        $query = NguoiDung::query();
 
-        // filter search
         if ($request->filled('search')) {
-            $q = mb_strtolower(trim($request->search));
-            $users = $users->filter(function ($u) use ($q) {
-                return str_contains((string) $u['id'], $q)
-                    || str_contains(mb_strtolower($u['name']), $q)
-                    || str_contains(mb_strtolower($u['email']), $q);
+            $q = $request->search;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('id', 'like', "%$q%")
+                    ->orWhere('ten_nguoi_dung', 'like', "%$q%")
+                    ->orWhere('email', 'like', "%$q%");
             });
         }
-        // filter status
-        if ($request->filled('status')) {
-            $status = $request->status === 'active' ? 1 : 0;
-            $users = $users->where('is_active', $status);
-        }
-        // 3) Lọc theo role mới
-        if ($request->filled('role')) {
-            $users = $users->where('role', $request->role);
-        }
 
-        // paginate manual (simple)
-        $perPage = 10;
-        $page = max(1, (int) $request->page);
-        $slice = $users->slice(($page - 1) * $perPage, $perPage)->values();
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $slice,
-            $users->count(),
-            $perPage,
-            $page,
-            ['path' => route('admin.users.index'), 'query' => $request->query()]
-        );
-
-        return view('admin.users.index', [
-            'users' => $paginator
-        ]);
+        $users = $query->paginate(10);
+        return view('admin.users.index', compact('users'));
     }
 
-    /** 2) Form chỉnh sửa */
     public function usersEdit($id)
     {
-        $user = collect($this->getUsers())->firstWhere('id', (int) $id);
-        if (!$user)
-            abort(404);
+        $user = NguoiDung::findOrFail($id);
         return view('admin.users.edit', compact('user'));
     }
-
-    /** 3) Xử lý update */
     public function usersUpdate(Request $request, $id)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
-            'phone' => 'nullable|string',
-            'role' => 'required|in:admin,customer',
-            'is_active' => 'required|in:0,1',
+            'ten_nguoi_dung' => 'required|string|max:255',
+            'email' => 'required|email|max:150',
+            'sdt' => 'nullable|string|max:20',
+            'dia_chi' => 'nullable|string|max:255',
+            'vai_tro' => 'required|in:admin,customer',
+            'mat_khau' => 'nullable|string|min:4', // <- Cho phép bỏ trống nếu không đổi
         ]);
 
-        $users = $this->getUsers();
-        foreach ($users as &$u) {
-            if ($u['id'] == (int) $id) {
-                $u['name'] = $data['name'];
-                $u['email'] = $data['email'];
-                $u['phone'] = $data['phone'];
-                $u['role'] = $data['role'];
-                $u['is_active'] = (int) $data['is_active'];
-                break;
-            }
+        $user = \App\Models\NguoiDung::findOrFail($id);
+
+        // Gán các trường cập nhật
+        $user->ten_nguoi_dung = $data['ten_nguoi_dung'];
+        $user->email = $data['email'];
+        $user->sdt = $data['sdt'] ?? '';
+        $user->dia_chi = $data['dia_chi'] ?? '';
+        $user->vai_tro = $data['vai_tro'];
+
+        // Nếu người dùng nhập mật khẩu mới
+        if (!empty($data['mat_khau'])) {
+            $user->mat_khau = Hash::make($data['mat_khau']);
         }
-        $this->saveUsers($users);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'Cập nhật thành công');
+        $user->save();
+
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công');
+    }
+    public function categoryIndex(Request $request)
+{
+    $query = Loai::query();
+
+    if ($request->filled('search')) {
+        $query->where('loai', 'like', '%' . $request->search . '%');
     }
 
-    /** 4) Xóa user */
-    public function usersDestroy(Request $request, $id)
-    {
-        $users = $this->getUsers();
-        $users = array_filter($users, fn($u) => $u['id'] !== (int) $id);
-        $this->saveUsers(array_values($users));
+    $categories = $query->paginate(10);
+    return view('admin.categories.index', [
+        'categories' => $categories,
+        'search' => $request->search ?? '',
+    ]);
+}
 
-        return back()->with('success', 'Đã xóa user');
+public function vouchersCreate()
+{
+    $sanphams = SanPham::all();
+    return view('admin.vouchers.create', compact('sanphams'));
+}
+
+public function vouchersStore(Request $request)
+{
+    $data = $request->validate([
+        'loai'           => 'required|in:fixed,percent',
+        'soluong_value'  => 'required|numeric|min:0',
+        'soluong'        => 'required|integer|min:1',
+        'ngay_bat_dau'   => 'required|date_format:Y-m-d\TH:i',
+        'ngay_ket_thuc'  => 'required|date|after_or_equal:ngay_bat_dau',
+        'sanphams'       => 'required|array',
+        'sanphams.'      => 'exists:sanpham,id',
+    ]);
+
+   // 1. Lấy phần số lớn nhất hiện có, convert thành int
+    $row = DB::table('vouchers')
+        ->select(DB::raw('MAX(CAST(SUBSTRING(ma_voucher,3) AS UNSIGNED)) as max_num'))
+        ->first();
+
+    $next = (int) ($row->max_num ?? 0) + 1;
+
+    // 2. Zero-pad về 4 chữ số, prefix 'VC'
+    $code = 'VC' . str_pad($next, 4, '0', STR_PAD_LEFT);
+
+    // Chuẩn bị dữ liệu
+    $voucher = Voucher::create([
+        'ma_voucher'    => $code,
+        'loai'          => $data['loai'],
+        'soluong'       => $data['soluong_value'],
+        'quantity'      => $data['soluong'],       // nếu bạn dùng cột tên khác
+        'ngay_bat_dau'  => $data['ngay_bat_dau'],
+        'ngay_ket_thuc' => $data['ngay_ket_thuc'],
+        // created_at sẽ tự gán bởi Eloquent
+        
+    ]);
+
+    // Gắn quan hệ sản phẩm
+    $voucher->sanphams()->sync($request->input('sanphams'));
+
+    return redirect()
+        ->route('admin.vouchers.index')
+        ->with('success', "Voucher {$code} đã được tạo thành công.");
+}
+
+public function categoryCreate()
+{
+    return view('admin.categories.create');
+}
+
+public function categoryStore(Request $request)
+{
+    $data = $request->validate([
+        'loai'       => 'required|string|max:255|unique:loai,loai',
+        'status'     => 'required|in:1,0',
+        'created_at' => 'required|date',
+    ], [
+        'loai.unique' => 'Tên danh mục đã tồn tại',
+    ]);
+
+    Loai::create($data);
+
+    return redirect()
+      ->route('admin.categories.index')
+      ->with('success','Thêm danh mục thành công!');
+}
+
+public function categoryEdit($id)
+{
+    $category = Loai::findOrFail($id);
+    return view('admin.categories.edit', compact('category'));
+}
+
+public function categoryUpdate(Request $request, $id)
+{
+    $data = $request->validate([
+        'loai'       => "required|string|max:255|unique:loai,loai,{$id}",
+        'status'     => 'required|in:0,1',
+        'created_at' => 'required|date',
+    ]);
+
+    Loai::where('id', $id)->update($data);
+
+    return redirect()
+        ->route('admin.categories.index')
+        ->with('success','Cập nhật danh mục thành công!');
+}
+
+public function categoryDestroy($id)
+{
+    $category = Loai::findOrFail($id);
+    $category->delete();
+    return redirect()->route('admin.categories.index')->with('success', 'Xóa danh mục thành công!');
+}
+
+
+    public function ordersIndex(Request $request)
+{
+    $query = DonHang::with(['user','sanPham']);
+    $query->where('trangthai','>', 1);
+
+    if ($request->filled('search')) {
+        $q = $request->search;
+        $query->where('madon','like',"%{$q}%")
+              ->orWhereHas('user', fn($qb) => 
+                  $qb->where('ten_nguoi_dung','like',"%{$q}%")
+              );
     }
-    public function reportrevenue(Request $request)
-    {
-        // Thu thập dữ liệu tùy filter (vd: từ session hoặc DB)
-        $data = $this->getRevenueData($request);
 
-        return view('admin.report.revenue', [
-            'reportData' => $data
+    $orders = $query
+        ->orderBy('created_at','desc')
+        ->paginate(15)
+        ->appends($request->only('search'));
+
+    // Thêm `madon` vào mảng truyền qua view
+    $orders->getCollection()->transform(function(DonHang $o) {
+        return [
+            'id'               => $o->id,
+            'madon'            => $o->madon,              // <-- đây
+            'created_at'       => $o->created_at,
+            'customer'         => $o->user->ten_nguoi_dung ?? '',
+            'trangthai' => $o->trangthai,
+            'order_status'     => $o->trangthaidonhang,
+            'shipping_method'  => $o->shipping_method,
+            'shipping_method_label'=> $o->shipping_method_label,
+            'delivery_status'  => $o->delivery_status,
+            'total_amount'     => $o->tongtien,
+        ];
+    });
+
+    return view('admin.orders.index', compact('orders'));
+}
+public function ordersShow($id)
+{
+    $o = DonHang::with([
+            'user',
+            'items.product.colorImages'  // load luôn ảnh
+        ])
+        ->findOrFail($id);
+
+    // Build mảng truyền xuống view
+    $order = [
+      'id'              => $o->madon,         // giờ dùng mã đơn
+      'created_at'      => $o->ngaydat,
+      'delivery_status' => $o->trang_thaigia ?? 'pending',
+      'trangthai' => $o->trangthai,
+      'shipping_method_label'=> $o->shipping_method_label,
+      'notes'           => $o->notes ?? '',
+      'discount'        => $o->discount ?? 0,
+      'shipping_fee'    => $o->shipping_fee ?? 0,
+      'total_amount'    => $o->tongtien,
+      'paid_amount'     => $o->paid_amount ?? 0,
+      'refunded_amount' => $o->refunded_amount ?? 0,
+      'received_amount' => $o->received_amount ?? 0,
+      'customer'        => $o->user->ten_nguoi_dung ?? '',
+      'items' => $o->items->map(function($item) {
+          // tìm ảnh đầu tiên (is_main) hoặc collection đầu tiên
+          $img = optional($item->product->colorImages->first())->image_path;
+          return [
+            'image_url' => $img
+              ? asset('storage/'.$img)
+              : 'https://via.placeholder.com/50',
+            'name'     => $item->product->ten,
+            'sku'      => $item->product->masanpham,
+            'quantity' => $item->soluong,
+            'price'    => $item->dongia,
+          ];
+      })->toArray(),
+    ];
+    
+
+    return view('admin.orders.show', compact('order'));
+}
+public function ordersUpdateNotes(Request $request, $madon)
+    {
+        $request->validate([
+            'notes' => 'nullable|string',
+        ]);
+
+        // LẤY ĐÚNG 1 MODEL (chứ không phải get() => Collection)
+        $order = DonHang::where('madon', $madon)->firstOrFail();
+
+        // Gán và lưu
+        $order->notes = $request->input('notes');
+        $order->save();
+
+        return redirect()
+            ->route('admin.orders.show', $order->id)
+            ->with('success', 'Ghi chú đã được cập nhật!');
+    }
+
+
+    public function inventoryIndex(Request $request)
+    {
+        $query = NhapKho::with('sanPham.loais');
+
+        // Tìm kiếm theo tên/mã sản phẩm
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->whereHas('sanPham', function ($q2) use ($q) {
+                $q2->where('ten', 'like', "%$q%")
+                    ->orWhere('masanpham', 'like', "%$q%");
+            });
+        }
+
+        // Lọc theo loại sản phẩm từ bảng loai
+        if ($request->filled('type')) {
+            $query->whereHas('sanPham.loai', function ($q2) use ($request) {
+                $q2->where('loai', $request->type);
+            });
+        }
+
+        // Lọc ngày
+        if ($request->filled('from_date')) {
+            $query->whereDate('ngaynhap', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('ngaynhap', '<=', $request->to_date);
+        }
+
+        // Phân trang
+        $perPage = $request->get('perPage', 10);
+        $items = $query->paginate($perPage)->withQueryString();
+
+        // Lấy danh sách loại sản phẩm để lọc (nếu cần)
+        $dsLoai = \App\Models\Loai::pluck('loai');
+
+        return view('admin.inventory.index', [
+            'items' => $items,
+            'search' => $request->search,
+            'type' => $request->type,
+            'from_date' => $request->from_date,
+            'to_date' => $request->to_date,
+            'perPage' => $perPage,
+            'dsLoai' => $dsLoai,
         ]);
     }
 
-    // Export ra Excel
+    public function feedbackIndex(Request $request)
+    {
+        // 1) Build query với eager-load quan hệ
+        $query = Feedback::with(['product','customer']);
+
+        // 2) Server-side filter nếu có
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function($qb) use ($q) {
+                $qb->where('id', 'like', "%{$q}%")
+                   ->orWhereHas('product', fn($q2)=> $q2->where('masanpham','like',"%{$q}%"))
+                   ->orWhereHas('customer', fn($q3)=> $q3->where('name','like',"%{$q}%"));
+            });
+        }
+        if ($request->filled('status')) {
+            // status bạn lưu ở cột `trang_thai`
+            $query->where('trang_thai', $request->status);
+        }
+
+        // 3) Phân trang
+        $paginator = $query
+            ->orderBy('ngaydanhgia','desc')
+            ->paginate(10)
+            ->appends($request->only('search','status'));
+
+        // 4) Chuyển từng item thành mảng đúng key view cần
+        $paginator->getCollection()->transform(function(Feedback $f) {
+            return [
+                'id'         => $f->id,
+                'product'    => $f->product->masanpham   ?? '',
+                'customer'   => $f->customer->ten_nguoi_dung        ?? '',
+                'rating'     => $f->sosao,
+                'comment'    => $f->noi_dung,
+                'reply'      => $f->reply,
+                'created_at' => $f->ngaydanhgia,
+                'is_replied' => (bool)$f->is_replied,
+            ];
+        });
+
+        // 5) Đưa về view
+        return view('admin.feedback.index', [
+            'feedbacks' => $paginator,
+            // nếu view có dùng $search, $status thì truyền thêm
+            'search'    => $request->search,
+            'status'    => $request->status,
+        ]);
+    }
+   public function feedbackReply(Request $request, $id)
+{
+    $data = $request->validate([
+        'reply' => 'required|string',
+    ], [
+        'reply.required' => 'Bạn chưa nhập nội dung trả lời.'
+    ]);
+
+    $fb = Feedback::findOrFail($id);
+    $isUpdate = !empty($fb->reply);
+    $fb->reply = $data['reply'];
+    $fb->is_replied = 1;
+    $fb->save();
+
+    return response()->json([
+        'success'    => true,
+        'reply'      => $fb->reply,
+        'is_replied' => $fb->is_replied,
+        'updated'    => $isUpdate, // true nếu là sửa lại phản hồi
+    ]);
+}
+public function feedbackDestroy($id)
+{
+    $fb = Feedback::findOrFail($id);
+    $fb->delete();
+    return redirect()->back()->with('success', 'Xóa feedback thành công!');
+}
+
+    public function vouchersIndex(Request $request)
+{
+    $query = Voucher::query()->with('sanphams');
+
+    if ($request->filled('search')) {
+        $query->where('ma_voucher', 'like', '%' . $request->search . '%');
+    }
+
+    $vouchers = $query
+        ->with('sanphams')      // eager-load pivot
+        ->orderBy('ma_voucher', 'asc')
+        ->paginate(10);
+
+    return view('admin.vouchers.index', [
+        'vouchers' => $vouchers,
+        'search' => $request->search,
+        'status' => $request->status
+    ]);
+}
+
+public function vouchersEdit($id)
+{
+    $voucher  = Voucher::with('sanphams')->findOrFail($id);
+    $sanphams = SanPham::all();
+    $voucher = Voucher::findOrFail($id);
+    return view('admin.vouchers.edit', compact('voucher', 'sanphams'));
+}
+
+ public function vouchersUpdate(Request $request, Voucher $voucher)
+    {
+        $data = $request->validate([
+            'loai'           => 'required|in:fixed,percent',
+            'soluong_value'  => 'required|numeric|min:0',
+            'soluong'        => 'required|integer|min:1',
+            'ngay_bat_dau'   => 'required|date_format:Y-m-d\TH:i',
+            'ngay_ket_thuc'  => 'required|date_format:Y-m-d\TH:i|after_or_equal:ngay_bat_dau',
+            'sanphams'       => 'required|array',
+            'sanphams.*'     => 'exists:sanpham,id',
+        ]);
+
+        // Cập nhật các trường cơ bản trên đối tượng $voucher được inject
+        $voucher->update([
+            'loai'          => $data['loai'],
+            'soluong'       => $data['soluong_value'],
+            'quantity'      => $data['soluong'],
+            'ngay_bat_dau'  => $data['ngay_bat_dau'],
+            'ngay_ket_thuc' => $data['ngay_ket_thuc'],
+        ]);
+
+        // Sync pivot sản phẩm
+        $voucher->sanphams()->sync($data['sanphams']);
+
+        return redirect()
+            ->route('admin.vouchers.index')
+            ->with('success', 'Cập nhật voucher thành công.');
+    }
+    public function vouchersDestroy(Request $request, Voucher $voucher)
+    {
+        // Xoá quan hệ pivot nếu cần
+        $voucher->sanphams()->detach();
+
+        // Xoá voucher
+        $voucher->delete();
+
+        return redirect()
+            ->route('admin.vouchers.index')
+            ->with('success', 'Xoá voucher thành công.');
+    }
+
+    public function reportrevenue()
+{
+    $data = \DB::table('donhang')
+        ->selectRaw('DATE(created_at) as ngay, COUNT(id) as so_don, SUM(tongtien) as tong_doanhthu')
+        ->where('trangthai', 3) // ví dụ: trạng thái 3 là đã hoàn tất
+        ->groupByRaw('DATE(created_at)')
+        ->orderByDesc('ngay')
+        ->get();
+
+    return view('admin.report.revenue', compact('data'));
+}
+
     public function exportRevenue(Request $request)
     {
         $data = $this->getRevenueData($request);
@@ -232,544 +539,142 @@ class AdminController extends Controller
         return Excel::download(new RevenueExport($data), $fileName);
     }
 
-    // Hiển thị phiên bản cho in
     public function printRevenue(Request $request)
     {
         $data = $this->getRevenueData($request);
-        return view('admin.report.revenue-print', [
-            'reportData' => $data
-        ]);
+        return view('admin.report.revenue-print', ['reportData' => $data]);
     }
 
-    // Hàm gom dữ liệu theo request filters
     private function getRevenueData(Request $request): array
     {
-        // ví dụ dummy: array of rows [ ['date'=>'2025-05-01','product'=>'A','qty'=>5,'total'=>100], … ]
-        // Ở đây bạn thay bằng query DB hoặc session-data
         return [
             ['Date' => '2025-05-01', 'Product' => 'A', 'Quantity' => 5, 'Total' => 500],
             ['Date' => '2025-05-02', 'Product' => 'B', 'Quantity' => 3, 'Total' => 300],
-            // …
         ];
     }
-    private $initialCategories = [
-        ['id' => 1, 'name' => 'Áo Thun', 'status' => 1, 'parent' => null, 'created_at' => '2025-05-01'],
-        ['id' => 2, 'name' => 'Quần Jean', 'status' => 1, 'parent' => null, 'created_at' => '2025-05-02'],
-        ['id' => 3, 'name' => 'Áo Khoác', 'status' => 0, 'parent' => 1, 'created_at' => '2025-05-03'],
-        ['id' => 4, 'name' => 'Phụ Kiện', 'status' => 1, 'parent' => null, 'created_at' => '2025-05-04'],
-    ];
-
-    // Lấy hoặc seed session
-    private function getCategories(): array
+    public function productCreate()
     {
-        if (!session()->has('admin_categories')) {
-            session(['admin_categories' => $this->initialCategories]);
-        }
-        return session('admin_categories');
+        return view('admin.product.create');
     }
-    private function saveCategories(array $cats): void
-    {
-        session(['admin_categories' => $cats]);
-    }
-
-    /**
-     * Hiển thị trang Danh mục
-     */
-    public function categories(Request $request)
-    {
-        // Lấy mảng và convert thành collection
-        $cats = collect($this->getCategories());
-
-        // Search theo tên hoặc ID
-        if ($request->filled('search')) {
-            $q = mb_strtolower(trim($request->search));
-            $cats = $cats->filter(function ($c) use ($q) {
-                return str_contains((string) $c['id'], $q)
-                    || str_contains(mb_strtolower($c['name']), $q);
-            });
-        }
-
-        // Paginate thủ công
-        $perPage = 10;
-        $page = max(1, (int) $request->page);
-        $total = $cats->count();
-        $slice = $cats->slice(($page - 1) * $perPage, $perPage)->values();
-
-        $paginator = new LengthAwarePaginator(
-            $slice,
-            $total,
-            $perPage,
-            $page,
-            ['path' => route('admin.categories.index'), 'query' => $request->query()]
-        );
-
-        return view('admin.categories.index', [
-            'categories' => $paginator
-        ]);
-    }
-    public function categoriesCreate()
-    {
-        // Lấy list các danh mục cha (parent = null) để chọn
-        $all = $this->getCategories();
-        $parents = collect($all)
-            ->whereNull('parent')
-            ->values()
-            ->all();
-
-        return view('admin.categories.create', compact('parents'));
-    }
-
-    /**
-     * Xử lý lưu danh mục mới
-     */
-    public function categoriesStore(Request $request)
+    public function productStore(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'status' => 'required|in:0,1',
-            'parent' => 'nullable|integer',   // ID danh mục cha
-            'created_at' => 'required|date',
+            'gia_nhap' => 'nullable|numeric',
+            'price' => 'required|numeric',
+            'qty' => 'required|integer',
+            'size' => 'nullable|string|max:10',
+            'color' => 'nullable|string|max:50',
+            'brand' => 'nullable|string|max:100',
+            'category' => 'required|string|max:100',
+            'import_date' => 'nullable|date',
+            'description' => 'nullable|string',
+            'images.*' => 'nullable|image|max:2048',
         ]);
 
-        // Lấy mảng hiện tại
-        $items = $this->getCategories();
-
-        // Tính ID mới = max hiện tại + 1
-        $maxId = collect($items)->max('id');
-        $newId = $maxId + 1;
-
-        // Tạo record mới
-        $new = [
-            'id' => $newId,
-            'name' => $data['name'],
-            'status' => (int) $data['status'],
-            'parent' => $data['parent'] ?? null,
-            'created_at' => $data['created_at'],
+        // Map loại sản phẩm sang tiền tố mã
+        $prefixMap = [
+            'Bóng đá' => 'BD',
+            'Bóng rổ' => 'BR',
+            'Cầu lông' => 'CL',
+            'Váy cầu lông' => 'VCL',
+            'Áo' => 'AO',
+            'Quần' => 'QU',
+            'Phụ kiện' => 'PK',
         ];
 
-        // Lưu lại session
-        $items[] = $new;
-        session(['admin_categories' => $items]);
+        $category = $data['category'];
+        $prefix = $prefixMap[$category] ?? 'SP';
 
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', "Đã thêm danh mục #{$newId}");
-    }
-    public function categoriesEdit($id)
-    {
-        // Lấy toàn bộ và tìm category theo id
-        $all = $this->getCategories();
-        $current = collect($all)->firstWhere('id', (int) $id);
-        if (!$current) {
-            abort(404);
-        }
+        // Tìm mã sản phẩm cuối cùng
+        $last = \App\Models\SanPham::where('masanpham', 'like', $prefix . '%')
+            ->orderByDesc('masanpham')
+            ->first();
 
-        // Danh sách parent options (những mục cha: parent = null, và không phải chính nó)
-        $parents = collect($all)
-            ->whereNull('parent')
-            ->where('id', '!=', (int) $id)
-            ->values()
-            ->all();
+        $number = $last ? ((int) filter_var($last->masanpham, FILTER_SANITIZE_NUMBER_INT) + 1) : 1;
+        $masanpham = $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
 
-        return view('admin.categories.edit', compact('current', 'parents'));
-    }
-
-    /**
-     *  Xử lý lưu cập nhật danh mục
-     */
-    public function categoriesUpdate(Request $request, $id)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:0,1',
-            'parent' => 'nullable|integer|not_in:' . $id, // không để parent = chính nó
-            'created_at' => 'required|date',
+        // Tạo sản phẩm
+        $sanPham = SanPham::create([
+            'masanpham' => $masanpham,
+            'ten' => $data['name'],
+            'gia_nhap' => $data['gia_nhap'] ?? 0,
+            'gia_ban' => $data['price'],
+            'so_luong' => $data['qty'],
+            'kich_thuoc' => $data['size'] ?? null,
+            'mau_sac' => $data['color'] ?? null,
+            'bo_mon' => $data['brand'] ?? null,
+            'loai' => $category,
+            'ngay_nhap' => $data['import_date'] ?? now(),
+            'mo_ta' => $data['description'] ?? null,
+            'trang_thai' => 1, // ✅ thêm dòng này
         ]);
 
-        $cats = $this->getCategories();
-        foreach ($cats as &$c) {
-            if ($c['id'] === (int) $id) {
-                $c['name'] = $data['name'];
-                $c['status'] = (int) $data['status'];
-                $c['parent'] = $data['parent'] ?? null;
-                $c['created_at'] = $data['created_at'];
-                break;
-            }
-        }
-        $this->saveCategories($cats);
-
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Cập nhật danh mục thành công');
-    }
-    public function categoriesDestroy($id)
-    {
-        // Lấy mảng cũ
-        $cats = $this->getCategories();
-
-        // Lọc bỏ phần tử có id trùng
-        $filtered = array_filter($cats, function ($c) use ($id) {
-            return $c['id'] !== (int) $id;
-        });
-
-        // Reset lại index và lưu session
-        $this->saveCategories(array_values($filtered));
-
-        return back()->with('success', "Đã xóa danh mục #{$id}");
-    }
-    private function getOrders(): array
-    {
-        if (!session()->has('admin_orders')) {
-            session([
-                'admin_orders' => [
-                    // --- Đơn hàng mẫu #1 ---
-                    [
-                        'id' => 'DH001',
-                        'customer' => 'Nguyễn Văn A',
-                        'payment_status' => 'paid',       // 'paid' hoặc 'unpaid'
-                        'order_status' => 'completed',  // 'pending','processing','completed','canceled'
-                        'shipping_method' => 'Giao hàng nhanh',
-                        'shipping_fee' => 20000,
-                        'discount' => 0,
-                        'refunded_amount' => 0,
-                        'created_at' => '2025-05-20 10:30:00',
-                        'items' => [
-                            [
-                                'name' => 'Quần jeans nam trắng',
-                                'sku' => 'Q-0001',
-                                'quantity' => 1,
-                                'price' => 1100000,
-                                // 'image_url' => 'https://link-to-image.jpg', // nếu có
-                            ],
-                            [
-                                'name' => 'Jumpsuit ngắn bẹt vai, tay dài',
-                                'sku' => 'J-0001',
-                                'quantity' => 1,
-                                'price' => 550000,
-                            ],
-                        ],
-                        'notes' => '',
-                        'delivery_status' => 'delivered', // 'pending','shipping','delivered','returned'
-                    ],
-
-                    // --- Đơn hàng mẫu #2 ---
-                    [
-                        'id' => 'DH002',
-                        'customer' => 'Trần Thị B',
-                        'payment_status' => 'unpaid',
-                        'order_status' => 'pending',
-                        'shipping_method' => 'Giao tiêu chuẩn',
-                        'shipping_fee' => 15000,
-                        'discount' => 0,
-                        'refunded_amount' => 0,
-                        'created_at' => '2025-05-21 15:45:00',
-                        'items' => [
-                            [
-                                'name' => 'Áo phông xanh',
-                                'sku' => 'A-0001',
-                                'quantity' => 2,
-                                'price' => 200000,
-                            ],
-                            [
-                                'name' => 'Nón thể thao',
-                                'sku' => 'N-0001',
-                                'quantity' => 1,
-                                'price' => 150000,
-                            ],
-                        ],
-                        'notes' => '',
-                        'delivery_status' => 'pending',
-                    ],
-                ]
-            ]);
-        }
-
-        return session('admin_orders');
-    }
-
-    /**
-     * Lưu mảng orders trở lại session
-     */
-    private function saveOrders(array $orders): void
-    {
-        session(['admin_orders' => $orders]);
-    }
-
-    /**
-     * Hiển thị trang Danh sách Đơn hàng (index)
-     * Bao gồm filter: search (mã đơn hoặc tên khách), from_date, to_date.
-     */
-    public function orders(Request $request)
-    {
-        // 1. Lấy mảng orders từ session (seed nếu chưa có)
-        $all = collect($this->getOrders());
-
-        // 2. Tìm kiếm theo 'search' (mã đơn hoặc tên khách)
-        if ($request->filled('search')) {
-            $q = mb_strtolower(trim($request->search));
-            $all = $all->filter(function ($o) use ($q) {
-                $haystack = mb_strtolower($o['id'] . ' ' . $o['customer']);
-                return str_contains($haystack, $q);
-            })->values();
-        }
-
-        // 3. Lọc từ ngày (from_date)
-        if ($request->filled('from_date')) {
-            try {
-                $from = Carbon::parse($request->input('from_date'))->startOfDay();
-                $all = $all->filter(fn($o) => Carbon::parse($o['created_at'])->gte($from))->values();
-            } catch (\Exception $e) {
-                // Nếu parse lỗi, bỏ qua
+        // Lưu nhiều ảnh nếu có
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $img) {
+                $path = $img->store('public/images');
+                \App\Models\ImgSanPham::create([
+                    'sanpham_id' => $sanPham->id,
+                    'image_path' => str_replace('public/', 'storage/', $path),
+                ]);
             }
         }
 
-        // 4. Lọc đến ngày (to_date)
-        if ($request->filled('to_date')) {
-            try {
-                $to = Carbon::parse($request->input('to_date'))->endOfDay();
-                $all = $all->filter(fn($o) => Carbon::parse($o['created_at'])->lte($to))->values();
-            } catch (\Exception $e) {
-                // Nếu parse lỗi, bỏ qua
+        return redirect()->route('admin.product.index')->with('success', 'Thêm sản phẩm thành công');
+    }
+    public function productDestroy($id)
+    {
+        $product = SanPham::with('images')->findOrFail($id);
+
+
+        // Xóa ảnh liên quan nếu có
+        foreach ($product->images as $image) {
+            if (\Storage::exists(str_replace('storage/', 'public/', $image->image_path))) {
+                \Storage::delete(str_replace('storage/', 'public/', $image->image_path));
             }
+            $image->delete();
         }
 
-        // 5. Tính toán lại total_amount cho mỗi đơn: tổng tiền hàng - discount + shipping_fee
-        $all = $all->map(function ($o) {
-            // Nếu key 'items' không tồn tại, đảm bảo là mảng rỗng
-            $items = $o['items'] ?? [];
-            $sumItems = collect($items)->sum(fn($i) => $i['price'] * $i['quantity']);
-            $discount = $o['discount'] ?? 0;
-            $shipping = $o['shipping_fee'] ?? 0;
+        $product->delete();
 
-            $o['total_amount'] = $sumItems - $discount + $shipping;
-            return $o;
-        });
-
-        // 6. Phân trang thủ công với LengthAwarePaginator
-        $perPage = 10;
-        $page = max(1, (int) $request->page);
-        $slice = $all->slice(($page - 1) * $perPage, $perPage)->values();
-
-        $paginator = new LengthAwarePaginator(
-            $slice,
-            $all->count(),
-            $perPage,
-            $page,
-            [
-                'path' => route('admin.orders.index'),
-                'query' => $request->query(),
-            ]
-        );
-
-        return view('admin.orders.index', [
-            'orders' => $paginator,
-            'search' => $request->input('search', ''),
-            'from_date' => $request->input('from_date', ''),
-            'to_date' => $request->input('to_date', ''),
-        ]);
+        return redirect()->route('admin.product.index')->with('success', 'Đã xóa sản phẩm');
     }
-
-    /**
-     * Hiển thị Chi tiết 1 Đơn hàng
-     */
-    public function ordersShow($id)
+    public function usersCreate()
     {
-        // 1. Lấy mảng orders từ session
-        $orders = $this->getOrders();
-
-        // 2. Tìm đúng order theo id
-        $order = collect($orders)->firstWhere('id', $id);
-        if (!$order) {
-            abort(404);
-        }
-
-        // 3. Phòng ngừa khi thiếu các key
-        $order['shipping_fee'] = $order['shipping_fee'] ?? 0;
-        $order['discount'] = $order['discount'] ?? 0;
-        $order['refunded_amount'] = $order['refunded_amount'] ?? 0;
-        $order['items'] = $order['items'] ?? [];
-        $order['delivery_status'] = $order['delivery_status'] ?? 'pending';
-        $order['notes'] = $order['notes'] ?? '';
-
-        // 4. Tính toán lại các giá trị liên quan
-        $sumItems = collect($order['items'])->sum(fn($i) => $i['price'] * $i['quantity']);
-        $order['total_amount'] = $sumItems - $order['discount'] + $order['shipping_fee'];
-        $order['paid_amount'] = ($order['payment_status'] === 'paid') ? $order['total_amount'] : 0;
-        $order['received_amount'] = $order['paid_amount'] - $order['refunded_amount'];
-
-        return view('admin.orders.show', compact('order'));
+        return view('admin.users.create');
     }
-
-    /**
-     * Cập nhật Ghi chú (notes) cho Đơn hàng – chỉ sửa mỗi key 'notes'.
-     */
-    public function ordersUpdateNotes(Request $request, $id)
+    public function usersStore(Request $request)
     {
-        // 1. Validate chỉ có field 'notes'
-        $data = $request->validate([
-            'notes' => 'nullable|string|max:500',
+        $request->validate([
+            'ten_nguoi_dung' => 'required|unique:nguoidung,ten_nguoi_dung',
+            'email' => 'required|email|unique:nguoidung,email',
+            'sdt' => 'nullable|string',
+            'dia_chi' => 'nullable|string',
+            'mat_khau' => 'required|string|min:3',
+            'vai_tro' => 'required|in:admin,customer',
+        ], [
+            'ten_nguoi_dung.unique' => 'Tên người dùng đã tồn tại, hãy nhập tên khác.',
+            'email.unique' => 'Email đã được sử dụng, hãy chọn email khác.',
         ]);
 
-        // 2. Lấy mảng orders từ session
-        $orders = $this->getOrders();
-
-        // 3. Duyệt, nếu trùng id thì update 'notes'
-        foreach ($orders as &$o) {
-            if ($o['id'] === $id) {
-                $o['notes'] = $data['notes'] ?? '';
-                break;
-            }
-        }
-        unset($o);
-
-        // 4. Lưu lại session (vẫn giữ nguyên toàn bộ key 'items')
-        $this->saveOrders($orders);
-
-        return redirect()
-            ->route('admin.orders.show', $id)
-            ->with('success', 'Cập nhật ghi chú thành công');
-    }
-
-    /**
-     * Xóa 1 Đơn hàng khỏi session
-     */
-    public function ordersDestroy($id)
-    {
-        $orders = array_filter(
-            $this->getOrders(),
-            fn($o) => $o['id'] !== $id
-        );
-        $this->saveOrders(array_values($orders));
-
-        return redirect()
-            ->route('admin.orders.index')
-            ->with('success', 'Đã xóa đơn hàng thành công');
-    }
-    public function members(Request $request)
-    {
-        // Ví dụ: giả lập mảng thành viên (thay bằng DB nếu có)
-        $all = collect([
-            [
-                'id' => 1,
-                'name' => 'Nguyễn Văn A',
-                'email' => 'a@test.com',
-                'phone' => '0123456789',
-                'role' => 'admin',      // 'admin' / 'member' / 'guest'
-                'is_active' => true,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Trần Thị B',
-                'email' => 'b@test.com',
-                'phone' => '0987654321',
-                'role' => 'member',
-                'is_active' => true,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Lê Văn C',
-                'email' => 'c@test.com',
-                'phone' => '0112233445',
-                'role' => 'guest',
-                'is_active' => false,
-            ],
+        \App\Models\NguoiDung::create([
+            'ten_nguoi_dung' => $request->ten_nguoi_dung,
+            'email' => $request->email,
+            'sdt' => $request->sdt ?? '',
+            'dia_chi' => $request->dia_chi,
+            'mat_khau' => $request->mat_khau,
+            'vai_tro' => $request->vai_tro,
         ]);
 
-        // 1. Tìm kiếm theo keyword (ID, name, email)
-        if ($request->filled('search')) {
-            $q = mb_strtolower(trim($request->search));
-            $all = $all->filter(function ($u) use ($q) {
-                return str_contains(mb_strtolower($u['id'] . ' ' . $u['name'] . ' ' . $u['email']), $q);
-            })->values();
-        }
-
-        // 2. Lọc status
-        if ($request->filled('status')) {
-            $status = $request->status === 'active';
-            $all = $all->filter(fn($u) => $u['is_active'] === $status)->values();
-        }
-
-        // 3. Lọc role
-        if ($request->filled('role')) {
-            $role = $request->role;
-            $all = $all->filter(fn($u) => $u['role'] === $role)->values();
-        }
-
-        // 4. Phân trang thủ công (LengthAwarePaginator)
-        $perPage = 10;
-        $page = max(1, (int) $request->page);
-        $slice = $all->slice(($page - 1) * $perPage, $perPage)->values();
-
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $slice,
-            $all->count(),
-            $perPage,
-            $page,
-            [
-                'path' => route('admin.members.index'),
-                'query' => $request->query(),
-            ]
-        );
-
-        return view('admin.members.index', [
-            'members' => $paginator
-        ]);
+        return redirect()->route('admin.users.index')->with('success', 'Thêm người dùng thành công!');
     }
-
-    // Xóa thành viên
-    public function membersDestroy($id)
+    public function usersDestroy($id)
     {
-        // Ví dụ làm thủ công: lọc array ra, cập nhật lại (nếu bạn lưu session)
-        // Ở đây giả sử chúng ta vẫn lưu vào session giống orders
-        $members = collect($this->getMembersFromSession())
-            ->filter(fn($u) => $u['id'] != $id)
-            ->values()
-            ->toArray();
+        // Xoá người dùng theo ID
+        \App\Models\NguoiDung::destroy($id);
 
-        $this->saveMembersToSession($members);
-
-        return redirect()->route('admin.members.index')
-            ->with('success', 'Đã xóa thành viên thành công');
-    }
-
-    // … Phương thức phụ (nếu bạn dùng session để lưu tạm) …
-    private function getMembersFromSession(): array
-    {
-        if (!session()->has('admin_members')) {
-            session([
-                'admin_members' => [
-                    [
-                        'id' => 1,
-                        'name' => 'Nguyễn Văn A',
-                        'email' => 'a@test.com',
-                        'phone' => '0123456789',
-                        'role' => 'admin',
-                        'is_active' => true,
-                    ],
-                    [
-                        'id' => 2,
-                        'name' => 'Trần Thị B',
-                        'email' => 'b@test.com',
-                        'phone' => '0987654321',
-                        'role' => 'member',
-                        'is_active' => true,
-                    ],
-                    [
-                        'id' => 3,
-                        'name' => 'Lê Văn C',
-                        'email' => 'c@test.com',
-                        'phone' => '0112233445',
-                        'role' => 'guest',
-                        'is_active' => false,
-                    ],
-                ]
-            ]);
-        }
-        return session('admin_members');
-    }
-
-    private function saveMembersToSession(array $members): void
-    {
-        session(['admin_members' => $members]);
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Xóa người dùng thành công');
     }
 }
