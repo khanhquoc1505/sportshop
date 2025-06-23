@@ -1,168 +1,232 @@
-    /* Container chính */
-    .gt-cart-container {
-      display: flex;
-      gap: 2rem;
-      padding: 2rem;
-      background-color: #f5f5f5;
-      font-family: Arial, sans-serif;
-      color: #333;
-    }
 
-    /* Cột bên trái: Chi tiết đơn hàng */
-    .gt-cart-summary {
-      flex: 1;
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .gt-summary-title {
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-    .gt-order-item {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1rem;
-    }
-    .gt-item-image {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-right: 1rem;
-    }
-    .gt-item-info {
-      flex: 1;
-    }
-    .gt-item-name {
-      font-size: 1rem;
-      margin-bottom: .5rem;
-    }
-    .gt-item-qty-price {
-      font-size: .95rem;
-      color: #555;
-    }
-    .gt-item-remove {
-      cursor: pointer;
-      color: #888;
-      font-size: .9rem;
-      margin-right: 1rem;
-    }
-    .gt-item-remove:hover {
-      color: #e00;
-    }
-    .gt-line {
-      height: 1px;
-      background: #eee;
-      margin: 1rem 0;
-    }
-    .gt-summary-row {
-      display: flex;
-      justify-content: flex-start;
-      margin-bottom: .75rem;
-    }
-    .gt-summary-row strong {
-      font-weight: normal;
-      color: #222;
-    }
-    .gt-summary-row {
-      font-weight: bold;
-    }
-    .gt-price {
-      font-weight: bold;
-      margin-left: 2rem;
-    }
-    .gt-grand-total {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #c00;
-      margin-bottom: 1rem;
-    }
-    .gt-vip-note {
-      display: inline-block;
-      padding: .5rem 1rem;
-      border: 1px solid #ccc;
-      background: #fafafa;
-      border-radius: 4px;
-      font-size: .9rem;
-      cursor: pointer;
-      text-decoration: none;
-      color: #333;
-    }
-    .gt-vip-note:hover {
-      background: #eee;
-    }
-
-    /* Cột bên phải: Form thông tin người nhận */
-    .gt-cart-form {
-      flex: 1;
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .gt-form-title {
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-    .gt-form-group {
-      margin-bottom: 1rem;
-    }
-    .gt-form-group label {
-      display: block;
-      margin-bottom: .3rem;
-      font-weight: 600;
-    }
-    .gt-form-input,
-    .gt-form-select,
-    .gt-form-textarea {
-      width: 100%;
-      padding: .75rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: .95rem;
-      box-sizing: border-box;
-    }
-    .gt-form-textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-    .gt-radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: .5rem;
-    }
-    .gt-radio-option {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .95rem;
-    }
-    .gt-radio-option input {
-      width: auto;
-    }
-
-    /* Nút Đặt hàng */
-    .gt-submit-btn {
-      display: block;
-      width: 100%;
-      padding: 1rem;
-      background-color: #009688;
-      color: #fff;
-      text-align: center;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 1.5rem;
-    }
-    .gt-submit-btn:hover {
-      background-color: #00796b;
-    }
+/* ======= Container chính ======= */
+.gt-cart-container {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  background: #f2f2f2;
+  font-family: 'Arial', sans-serif;
+  color: #333;
+}
+/* ======= Cột Chi tiết đơn hàng ======= */
+.gt-cart-summary {
+  flex: 1;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+.gt-summary-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+/* Mỗi sản phẩm */
+.gt-order-item {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.gt-order-item:last-child {
+  margin-bottom: 0;
+}
+/* Thumb + nút Xóa */
+.gt-item-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gt-item-thumb img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.gt-item-thumb .gt-item-remove {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.gt-item-thumb .gt-item-remove:hover {
+  color: #c00;
+}
+/* Thông tin bên phải mỗi item */
+.gt-item-details {
+  flex: 1;
+}
+.gt-item-details .name {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.gt-item-details .qty-line {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+.gt-item-details .qty-line span.discount {
+  color: #c00;
+}
+.gt-item-details .line {
+  border-top: 1px solid #eee;
+  margin: 0.5rem 0;
+}
+.gt-item-details .total-line {
+  font-size: 1rem;
+  font-weight: 600;
+}
+/* Phí & Tổng chung */
+.gt-summary-footer {
+  margin-top: 1rem;
+}
+.gt-summary-footer .row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.gt-summary-footer .row.total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #c00;
+  border-top: 1px solid #ddd;
+  padding-top: 0.75rem;
+}
+/* ======= Cột Người nhận hàng ======= */
+.gt-cart-form {
+  flex: 1;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+.gt-form-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+.gt-form-group {
+  margin-bottom: 1rem;
+}
+.gt-form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+.gt-form-input,
+.gt-form-select,
+.gt-form-textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+.gt-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.gt-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.gt-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.gt-radio-option input {
+  margin: 0;
+  accent-color: #00acc1;
+}
+.gt-radio-option img,
+.gt-radio-option svg {
+  width: 20px;
+  height: auto;
+}
+/* Nút Đặt hàng */
+.gt-submit-btn {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background: #00acc1;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.gt-submit-btn:hover {
+  background: #0097a7;
+}
+/* Form tăng/giảm số lượng */
+.qty-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.qty-form button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.qty-form button:hover {
+  background: #eee;
+}
+.qty-number {
+  display: inline-block;
+  width: 30px;
+  text-align: center;
+  font-weight: 500;
+}
+.gt-voucher-section {
+  margin-bottom: 1rem;
+}
+.gt-voucher-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.gt-voucher-btn:hover {
+  background: #f9f9f9;
+}
+.gt-voucher-select {
+  width: calc(100% - 110px);
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.gt-apply-voucher-btn {
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  background: #00acc1;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.gt-apply-voucher-btn:hover {
+  background: #0097a7;
+}

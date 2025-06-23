@@ -9,8 +9,8 @@ class DonHang extends Model
 {
     protected $table = 'donhang';
     protected $fillable = [
-        'nguoidung_id','sanpham_id','madon','ngaydat',
-        'tongtien','trangthaidonhang','trangthai','thoigianthem','soluong'
+        'nguoidung_id','madon','ngaydat',
+        'tongtien','gia_giam','trangthaidonhang','trangthai','thoigianthem','soluong'
     ];
 
     public function user()
@@ -22,4 +22,8 @@ class DonHang extends Model
     {
         return $this->belongsTo(SanPham::class,'sanpham_id');
     }
+    public function chiTiet()
+{
+    return $this->hasMany(DonHangSanPham::class, 'donhang_id');
+}
 }

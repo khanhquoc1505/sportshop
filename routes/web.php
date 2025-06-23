@@ -1,13 +1,23 @@
 <?php
 
+use App\Http\Controllers\TiemKiemController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ChiTietController;
+use App\Http\Controllers\CTDonHangController;
+use App\Http\Controllers\AddGioHangController;
 use App\Models\SanPham;
 use App\Models\BoMon;
 
 
+
+//////////////
+Route::get('/san-pham/tim-kiem', [TiemKiemController::class, 'search'])
+     ->name('product.search');
+Route::view('layouts/timkiemSP', 'layouts.timkiem')
+     ->name('layouts.timkiemSP');
+//////////////
 Route::get('/', function () {
     return view('home/trangchu');
 });
@@ -23,6 +33,8 @@ Route::post('/cart/add/{product}', [ChiTietController::class, 'add'])->name('car
 Route::middleware('auth')->group(function(){
     Route::post('/wishlist/toggle/{product}', [ChiTietController::class, 'toggle'])->name('wishlist.toggle');
 });
+Route::post('/product/{product}/danhgia', [ChiTietController::class, 'guidanhgia'])
+    ->name('product.mo_ta');
 Route::get('product/{id}/mo-ta', [ChiTietController::class, 'moTa'])
      ->name('product.mo_ta');
 ////////////////////////////////////////////////////////////////////////
@@ -34,6 +46,43 @@ Route::post('/dangnhap', [HomeController::class, 'login'])->name('login');
 
 Route::post('/dang-xuat', [HomeController::class, 'logout'])->name('logout');
 ////////////////////////////////////////////////////////////////////////
+//chi tiết đơn hàng
+Route::middleware('auth')->group(function(){
+    // danh sách
+    Route::get('/donhang', [CTDonHangController::class, 'donhang'])
+         ->name('donhang.index');
+
+    // chi tiết
+    Route::get('/donhang/{id}', [CTDonHangController::class, 'show'])
+         ->name('donhang.show');
+});
+
+// giỏ hàng
+
+Route::middleware('auth')->group(function(){
+    // Hiển thị giỏ hàng
+    Route::get('/giohang', [AddGioHangController::class, 'showgiohang'])
+         ->name('cart.index');
+
+    // Thêm vào giỏ
+    Route::post('/giohang/them/{product}', [AddGioHangController::class, 'themgiohang'])
+         ->name('cart.add');
+    // Cập nhật số lượng
+    Route::post('/giohang/update/{id}', [AddGioHangController::class, 'update'])
+         ->name('cart.update');
+    // Xóa item
+    Route::delete('/giohang/remove/{id}', [AddGioHangController::class, 'remove'])
+         ->name('cart.remove');
+    // Thanh toán
+    Route::post('/giohang/thanhtoan', [AddGioHangController::class, 'thanhtoan'])
+         ->name('cart.thanhtoan');
+});
+// chi tiết đon hàng
+Route::post('/danh-gia', [CTDonHangController::class, 'store'])
+     ->name('danhgia.store')
+     ->middleware('auth');
+
+
 Route::get('layouts/timkiemSP', function () {
     return view('layouts/timkiemSP');
 });
@@ -47,15 +96,7 @@ Route::get('/dangky', function () {
 Route::get('/quenmatkhau', function () {
     return view('layouts.quenmatkhau');
 });
-Route::get('/giohang', function () {
-    return view('layouts.giohang');
-});
-Route::get('/donhang', function () {
-    return view('layouts.donhang');
-});
-Route::get('/chitietdonhang', function () {
-    return view('layouts.chitietdonhang');
-});
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Route::prefix('admin')->name('admin.')->group(function () {
     // Dashboard

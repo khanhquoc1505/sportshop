@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SanPham;
 use App\Models\NguoiDung;
 use App\Models\BoMon;
+use App\Models\Loai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -12,13 +13,11 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
+    //HEADER
     public function index()
     {
-         
-    
         // Lấy products kèm ảnh đại diện
         $products = SanPham::with('avatarImage')->get();
-
         // Nếu bạn cần tabs theo bộ môn
         $bomons   = BoMon::with('sanPhams')->get();
 

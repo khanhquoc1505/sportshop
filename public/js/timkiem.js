@@ -1,11 +1,10 @@
-function toggleFilter(element) {
-      const options = element.nextElementSibling;
-      const icon = element.querySelector('span');
-      if (options.style.display === 'block') {
-        options.style.display = 'none';
-        icon.textContent = '+';
-      } else {
-        options.style.display = 'block';
-        icon.textContent = '-';
-      }
+
+  function toggleFilter(el) {
+    const opts = el.nextElementSibling;
+    const sign = el.querySelector('span');
+    if (opts.style.display === 'block') {
+      opts.style.display = 'none'; sign.textContent = '+';
+    } else {
+      opts.style.display = 'block'; sign.textContent = '–';
     }
+  }

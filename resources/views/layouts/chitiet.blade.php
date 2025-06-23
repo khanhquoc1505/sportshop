@@ -6,15 +6,23 @@
     <div class="ct-product-detail-container">
       {{-- Thumbnails --}}
       <div class="ct-thumbnail-list">
-  @foreach($thumbnails as $url)
-    <img class="thumbnail" src="{{ $url ?? asset('images/default.jpg') }}" alt="thumb">
-@endforeach
+  @foreach($allColorImages as $img)
+    <img 
+      class="thumbnail" 
+      src="{{ $img['url'] }}" 
+      data-color-id="{{ $img['mausac_id'] }}" 
+      alt="thumb"
+    >
+  @endforeach
 </div>
       {{-- Main image: lấy ảnh đầu --}}
       <div class="ct-main-image">
-        {{-- Khởi tạo với ảnh đầu --}}
-        <img id="main-image" src="{{ $thumbnails->first() ?? asset('images/default.jpg') }}" alt="Main image">
-      </div>
+  <img 
+    id="main-image" 
+    src="{{ $colorVariants[0]['image_url'] }}" 
+    alt="Main image"
+  >
+</div>
     </div>
 
     <div class="ct-product-info">
@@ -22,7 +30,7 @@
       <div class="ct-product-meta">
         <p><strong>Mã sản phẩm:</strong> {{ $product->masanpham }}</p>
         <p><strong>Trạng thái:</strong>
-          {{ $product->trang_thai==='active'?'Còn hàng':'Hết hàng' }}
+          {{ $product->trang_thai==='active'?'Hết hàng':'Còn hàng' }}
         </p>
       </div>
       <div class="ct-product-price">
@@ -33,20 +41,23 @@
         {{-- Màu --}}
         <label>Màu</label>
         <div class="ct-color-options">
-          @foreach($colorVariants as $i => $cv)
-            <div class="color-swatch {{ $i===0?'active':'' }}"
-                 data-image="{{ $cv['image_url'] }}"
-                 title="{{ $cv['mausac'] }}">
-              {{ $cv['mausac'] }}
-            </div>
-          @endforeach
-        </div>
+  @foreach($colorVariants as $i => $c)
+    <div 
+      class="color-swatch {{ $i===0?'active':'' }}"
+      data-color-id="{{ $c['mausac_id'] }}"
+      data-image="{{ $c['image_url'] }}"
+      title="{{ $c['mausac'] }}"
+    >
+      {{ $c['mausac'] }}
+    </div>
+  @endforeach
+</div>
 
         {{-- Size --}}
         <label>SIZE</label>
         <div class="ct-size-options">
           @foreach($sizes as $size)
-            <button class="size-btn">{{ $size->size }}</button>
+            <button class="size-btn" data-size="{{ $size->size }}">{{ $size->size }}</button>
           @endforeach
         </div>
       </div>
@@ -61,6 +72,11 @@
         <form action="{{ route('cart.add', $product) }}" method="POST">
           @csrf
           <input type="hidden" name="quantity" id="form-qty" value="1">
+          <input type="hidden" name="size" id="selected-size" value="">
+          <input type="hidden" id="selected-color" name="mausac" 
+       value="{{ $colorVariants[0]['mausac_id'] }}">
+        <input type="hidden" id="selected-image" name="hinh_anh" 
+       value="{{ basename($colorVariants[0]['image_url']) }}">
           <button type="submit" class="ct-add-to-cart">Thêm vào giỏ hàng</button>
         </form>
         <button class="ct-buy-now">Mua ngay</button>
@@ -76,38 +92,26 @@
   <div class="ct-product-detail-tabs">
     <div class="ct-tab-buttons">
       <button class="ct-tab-btn active" onclick="showTab('details')">CHI TIẾT SẢN PHẨM</button>
-      <button class="ct-tab-btn" onclick="showTab('reviews')">GỬI ĐÁNH GIÁ</button>
       <button class="ct-tab-btn" onclick="showTab('danhsach')">DANH SÁCH ĐÁNH GIÁ</button>
     </div>
 
     <div id="details" class="ct-tab-content active">
       {!! $product->mo_ta !!}
     </div>
-
-    <div id="reviews" class="ct-tab-content">
-      <h3>Gửi đánh giá</h3>
-      <form action="{{ route('product.mo_ta', $product) }}" method="POST" class="ct-review-form">
-        @csrf
-        <label>Đánh giá của bạn:</label>
-        <select name="sosao">
-          @for($i=1;$i<=5;$i++)
-            <option value="{{ $i }}">{{ str_repeat('★',$i) }}</option>
-          @endfor
-        </select>
-        <input name="ten" type="text" placeholder="Họ và tên *" required>
-        <input name="sdt" type="text" placeholder="Số điện thoại *" required>
-        <textarea name="noi_dung" rows="5" placeholder="Đánh giá của bạn..." required></textarea>
-        <button type="submit">Gửi đánh giá</button>
-      </form>
-    </div>
-
     <div id="danhsach" class="ct-tab-content">
       <h3>Đánh giá gần đây</h3>
       @forelse($product->danhGias as $dg)
         <div class="ct-review-item">
           <div class="ct-review-name">{{ $dg->user->ten_nguoi_dung ?? 'Khách' }}</div>
           <span class="ct-stars">{{ str_repeat('★', $dg->sosao) }}</span>
-          <div class="ct-review-text">{{ $dg->user->pivot->noi_dung ?? '' }}</div>
+          <div class="ct-review-text">{{ $dg->noi_dung ?? '' }}</div>
+          @if(!empty($dg->hinh_anh) && is_array($dg->hinh_anh))
+          <div class="ct-review-images">
+            @foreach($dg->hinh_anh as $img)
+              <img src="{{ asset('storage/'.$img) }}" alt="Review image" class="ct-review-image">
+            @endforeach
+          </div>
+        @endif
         </div>
       @empty
         <p>Chưa có đánh giá nào.</p>
@@ -119,11 +123,15 @@
   <div class="ct-lienquan">Sản phẩm liên quan</div>
 <div class="ct-related-products">
   @forelse($related as $item)
+    @php
+      // nếu avatarImage trả về null thì dùng default.jpg
+      $avatar = optional($item->avatarImage)->hinh_anh ?? 'default.jpg';
+    @endphp
+
     <div class="ct-related-product-card">
       <a href="{{ route('product.show', $item->id) }}">
-        {{-- Ảnh đại diện sản phẩm liên quan --}}
         <img 
-          src="{{ asset('images/' . $item->avatarImage->hinh_anh) }}" 
+          src="{{ asset('images/' . $avatar) }}" 
           alt="{{ $item->ten }}"
         >
         <div class="ct-related-info">
@@ -135,5 +143,6 @@
   @empty
     <p>Không có sản phẩm liên quan.</p>
   @endforelse
+
 </div>
 @endsection

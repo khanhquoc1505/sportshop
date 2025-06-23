@@ -21,80 +21,101 @@
       <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="logo-image">
     </a>
   </div>
-  <nav class="header-nav">
-    <ul>
-      <li class="dropdown">
-        <a href="#">KHUYẾN MÃI <span class="caret">▾</span></a>
-        <ul class="dropdown-menu">
-          <li><a href="#">Giảm 10%</a></li>
-          <li><a href="#">Flash Sale</a></li>
-        </ul>
-      </li>
-      <li class="dropdown">
-        <a href="#">QUẦN ÁO <span class="caret">▾</span></a>
-        <ul class="dropdown-menu">
-          <li><a href="{{ url('layouts/timkiemSP?loai=aothun') }}">Áo Thun</a></li>
-          <li><a href="{{ url('layouts/timkiemSP?loai=aokhoac') }}">Áo Khoác</a></li>
-        </ul>
-      </li>
-      <li class="dropdown">
-        <a href="#">GIÀY <span class="caret">▾</span></a>
-        <ul class="dropdown-menu">
-          <li><a href="{{ url('layouts/timkiemSP?loai=giay_thethao') }}">Giày Thể Thao</a></li>
-          <li><a href="{{ url('layouts/timkiemSP?loai=giay_luoi') }}">Giày Lười</a></li>
-        </ul>
-      </li>
-      <li class="dropdown">
-        <a href="#">HÃNG <span class="caret">▾</span></a>
-        <ul class="dropdown-menu">
-          <li><a href="{{ url('layouts/timkiemSP?loai=balo') }}">ADIDAS</a></li>
-          <li><a href="{{ url('layouts/timkiemSP?loai=mu') }}">NIKE</a></li>
-        </ul>
-      </li>
-      <li class="mobile-menu">
-        <a href="#"><span>☰</span></a>
-      </li>
-    </ul>
-  </nav>
-<!-- Search Box ở giữa -->
-  <div class="header-search">
-    <form action="{{ url('layouts/timkiemSP') }}" method="GET" class="search-form">
-      <input
-        type="text"
-        name="q"
-        class="search-input"
-        placeholder="Tìm kiếm sản phẩm..."
-        value="{{ request('q') ?? '' }}"
-      />
-      <button type="submit" class="search-btn" aria-label="Search">🔍</button>
-    </form>
-  </div>
+ <nav class="header-nav">
+  <ul>
+    {{-- QUẦN ÁO --}}
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-target="#loai-menu">
+        QUẦN ÁO <span class="caret">▾</span>
+      </a>
+      <ul id="loai-menu" class="dropdown-menu">
+        @foreach($loais as $loai)
+          <li>
+            <a href="{{ route('product.search', ['loai' => $loai->id]) }}">
+              {{ ucfirst($loai->loai) }}
+            </a>
+          </li>
+        @endforeach
+      </ul>
+    </li>
+
+    {{-- BỘ MÔN --}}
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-target="#bomon-menu">
+        BỘ MÔN <span class="caret">▾</span>
+      </a>
+      <ul id="bomon-menu" class="dropdown-menu">
+        @foreach($bomons as $bm)
+          <li>
+            <a href="{{ route('product.search', ['bomon' => $bm->id]) }}">
+              {{ $bm->bomon }}
+            </a>
+          </li>
+        @endforeach
+      </ul>
+    </li>
+
+    <li class="mobile-menu">
+      <a href="#"><span>☰</span></a>
+    </li>
+  </ul>
+</nav>
+
+<!-- Search Box -->
+<div class="header-search">
+  <form action="{{ route('product.search') }}" method="GET" class="search-form">
+    <input
+      type="text"
+      name="q"
+      placeholder="Tìm kiếm sản phẩm..."
+      value="{{ request('q','') }}"
+    >
+    <button type="submit">🔍</button>
+  </form>
+</div>
   <div class="header-right">
-    <div class="relative inline-block">
-    <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md hidden z-50">
-        @auth
+  <div class="relative inline-block">
+    {{-- Nút icon 👤 --}}
+    <button onclick="toggleUserMenu()" class="icon-btn-user text-white px-2 py-1">
+        👤
+    </button>
+
+    {{-- Dropdown menu --}}
+    <div id="userDropdown" style="display: none;" class="user-dropdown">
+    @auth
+        <ul class="user-dropdown-list">
             @if(Auth::user()->vai_tro === 'admin')
-                <a href="{{ url('/admin/dashboard') }}" class="block px-4 py-2 hover:bg-gray-100">🔧 Quản trị</a>
+                <li><a href="{{ url('/admin/dashboard') }}">Quản trị</a></li>
             @else
-                <a href="{{ url('/donhang') }}" class="block px-4 py-2 hover:bg-gray-100">📦 Đơn hàng của tôi</a>
+                <li><a href="{{ route('donhang.index') }}">Đơn hàng của tôi</a></li>
             @endif
-            <form action="{{ route('logout') }}" method="POST">
-    @csrf
-    <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">🚪 Đăng xuất</button>
-</form>
-        @else
-            <a href="{{ url('/dangnhap') }}" class="icon-btn" aria-label="User">👤</a>
-        @endauth
-    </div>
-    </div>
-    <a href="{{ url('/giohang') }}" class="icon-btn" aria-label="Cart">
-      🛒<span class="badge">1</span>
-    </a>
+            <li>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit">Đăng xuất</button>
+                </form>
+            </li>
+        </ul>
+    @else
+        <ul class="user-dropdown-list">
+            <li><a href="{{ url('/dangnhap') }}">Đăng nhập</a></li>
+        </ul>
+    @endauth
+</div>
+  </div>
+    
+      @if(isset($donhang) && $donhang && $donhang->chiTiet->count())
+  <a href="{{ route('cart.index') }}" class="icon-btn">
+    🛒 <span class="badge">{{ $donhang->chiTiet->sum('soluong') }}</span>
+  </a>
+@else
+  <a href="{{ route('cart.index') }}" class="icon-btn">
+    🛒 <span class="badge">0</span>
+  </a>
+@endif
+
   </div>
 </header>
-
-
-
   @yield('content')
 
   <footer class="footer-grid">
@@ -140,6 +161,8 @@
     <script src="{{ asset('js/timkiem.js') }}"></script>
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="{{ asset('js/chitiet.js') }}"></script>
+    <script src="{{ asset('js/giohang.js') }}"></script>
+    <script src="{{ asset('js/ctdonhang.js') }}"></script>
   
 </body>
 </html>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\SanPham;
 use Illuminate\Http\Request;
 use App\Models\YeuThich;
+use App\Models\DanhGia;
+use App\Models\DonHangSanPham;
 use Illuminate\Support\Facades\Auth;
 
 class ChiTietController extends Controller
@@ -17,7 +19,7 @@ class ChiTietController extends Controller
         'colorImages',   // chứa cả hinh_anh
         'boMons'       // belongsToMany BoMon → để lấy sản phẩm cùng môn
     ])->findOrFail($id);
-
+        
     // 1) Thumbnails
     $thumbnails = $product->colorImages
     ->pluck('image_path')
@@ -26,12 +28,22 @@ class ChiTietController extends Controller
     ->values();
 
     // 2) Color variants
+    // Lấy tất cả ảnh cùng màu
+// 1) Tất cả ảnh (cho thumbnails), gắn cả màu
+    $allColorImages = $product->colorImages->map(fn($img) => [
+        'mausac_id'  => $img->mausac_id,
+        'image_path' => $img->image_path,
+        'url'        => asset('images/' . $img->image_path),
+    ])->values();
+
+    // 2) Danh sách swatch mỗi màu (lấy ảnh đầu làm đại diện)
     $colorVariants = $product->colorImages
-        ->map(fn($img) => [
-            'mausac'    => $img->mauSac->mausac,
-            'image_url' => asset('images/' . $img->image_path),
+        ->groupBy('mausac_id')
+        ->map(fn($group, $mausac_id) => [
+            'mausac_id' => $mausac_id,
+            'mausac'    => $group->first()->mauSac->mausac,
+            'image_url' => asset('images/' . $group->first()->image_path),
         ])
-        ->unique('mausac')
         ->values();
 
     // 3) Sizes
@@ -51,7 +63,7 @@ class ChiTietController extends Controller
     }
 
     return view('layouts.chitiet', compact(
-        'product', 'thumbnails', 'colorVariants', 'sizes', 'related'
+        'product', 'thumbnails','allColorImages', 'colorVariants', 'sizes', 'related'
     ));
 }
 
@@ -105,4 +117,7 @@ class ChiTietController extends Controller
 
         return back()->with('success', $message);
     }
+
+    
+
 }

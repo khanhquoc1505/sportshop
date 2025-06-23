@@ -25,19 +25,16 @@
   <main class="product-grid">
   @forelse($products as $product)
     @php
-      $imgPath = optional($product->avatarImage)->image_path
-        ? asset('images/' . $product->avatarImage->image_path)
-        : asset('images/default.jpg');
+      // Lấy file ảnh hoặc fallback
+      $file = optional($product->avatarImage)->image_path ?? 'default.jpg';
+      $imgPath = asset('images/' . $file);
     @endphp
 
-    <a href="{{ route('product.show', $product->id) }}" class="product-card">
-      <img 
-        src="{{ $imgPath }}" 
-        alt="{{ $product->ten }}"
-      >
+    <a href="{{ route('product.show', $product) }}" class="product-card">
+      <img src="{{ $imgPath }}" alt="{{ $product->ten }}" class="product-card-img">
       <div class="product-info">
-        <div class="product-title">{{ $product->ten }}</div>
-        <div>{{ number_format($product->gia_ban,0,',','.') }} đ</div>
+        <h3 class="product-title">{{ $product->ten }}</h3>
+        <p class="product-price">{{ number_format($product->gia_ban,0,',','.') }} đ</p>
       </div>
     </a>
   @empty

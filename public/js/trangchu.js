@@ -26,16 +26,15 @@ const swiper = new Swiper('.swiper', {
     });
   });
 
-  function toggleUserMenu() {
+function toggleUserMenu() {
     const menu = document.getElementById('userDropdown');
-    menu.classList.toggle('hidden');
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
 }
 
-// Đóng menu nếu click ra ngoài
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     const menu = document.getElementById('userDropdown');
-    const button = document.querySelector('.icon-btn');
-    if (!menu.contains(e.target) && !button.contains(e.target)) {
-        menu.classList.add('hidden');
+    const button = document.querySelector('.icon-btn-user');
+    if (menu && !menu.contains(e.target) && !button.contains(e.target)) {
+        menu.style.display = 'none';
     }
 });

@@ -81,7 +81,12 @@ class SanPham extends Model
 
     public function vouchers()
     {
-        return $this->hasMany(Voucher::class, 'sanpham_id');
+        return $this->belongsToMany(
+            Voucher::class,
+            'voucher_sanpham',
+            'sanpham_id',
+            'voucher_id'
+        );
     }
      public function avatarImage()
 {

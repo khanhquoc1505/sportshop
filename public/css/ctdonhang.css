@@ -90,3 +90,133 @@
   font-weight: 600;
   color: #333;
 }
+
+/* //////////////////////// */
+/* Bao ngoài form đánh giá */
+/* Container chính của form */
+.order-detail-review {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* Tiêu đề */
+.order-detail-review h3 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+}
+
+/* Mỗi nhóm trường */
+.order-detail-review .review-form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label */
+.order-detail-review .review-form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Input, select, textarea */
+.order-detail-review .review-form-group select,
+.order-detail-review .review-form-group input[type="text"],
+.order-detail-review .review-form-group textarea,
+.order-detail-review .review-form-group input[type="file"] {
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+  .btn-show-review {
+    display: inline-block;
+    margin: 0.5rem 0;
+    padding: 0.5rem 1rem;
+    background-color: #e60012;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .btn-show-review:hover {
+    background-color: #cc0010;
+  }
+  .order-detail-review {
+    display: none;
+    max-width: 600px;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+  }
+  .order-detail-review h3 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+  }
+  .order-detail-review .review-form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .order-detail-review .review-form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #444;
+  }
+  .order-detail-review select,
+  .order-detail-review textarea,
+  .order-detail-review input[type="file"] {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .order-detail-review select:focus,
+  .order-detail-review textarea:focus {
+    outline: none;
+    border-color: #e60012;
+    box-shadow: 0 0 4px rgba(230,0,18,0.3);
+  }
+  .order-detail-review button[type="submit"] {
+    width: 100%;
+    padding: 0.75rem;
+    background: #e60012;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+  }
+  .order-detail-review button[type="submit"]:hover {
+    background: #cc0010;
+    transform: translateY(-1px);
+  }
+  .order-detail-review select[name="sosao"] {
+    letter-spacing: .5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+
