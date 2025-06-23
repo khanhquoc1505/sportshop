@@ -102,7 +102,7 @@ class AdminController extends Controller
             'mat_khau' => 'nullable|string|min:4', // <- Cho phép bỏ trống nếu không đổi
         ]);
 
-        $user = \App\Models\NguoiDung::findOrFail($id);
+        $user = NguoiDung::findOrFail($id);
 
         // Gán các trường cập nhật
         $user->ten_nguoi_dung = $data['ten_nguoi_dung'];
@@ -363,7 +363,7 @@ public function ordersUpdateNotes(Request $request, $madon)
         $items = $query->paginate($perPage)->withQueryString();
 
         // Lấy danh sách loại sản phẩm để lọc (nếu cần)
-        $dsLoai = \App\Models\Loai::pluck('loai');
+        $dsLoai = Loai::pluck('loai');
 
         return view('admin.inventory.index', [
             'items' => $items,
@@ -587,7 +587,7 @@ public function vouchersEdit($id)
         $prefix = $prefixMap[$category] ?? 'SP';
 
         // Tìm mã sản phẩm cuối cùng
-        $last = \App\Models\SanPham::where('masanpham', 'like', $prefix . '%')
+        $last = SanPham::where('masanpham', 'like', $prefix . '%')
             ->orderByDesc('masanpham')
             ->first();
 
@@ -614,7 +614,7 @@ public function vouchersEdit($id)
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $img) {
                 $path = $img->store('public/images');
-                \App\Models\ImgSanPham::create([
+                ImgSanPham::create([
                     'sanpham_id' => $sanPham->id,
                     'image_path' => str_replace('public/', 'storage/', $path),
                 ]);
@@ -658,7 +658,7 @@ public function vouchersEdit($id)
             'email.unique' => 'Email đã được sử dụng, hãy chọn email khác.',
         ]);
 
-        \App\Models\NguoiDung::create([
+        NguoiDung::create([
             'ten_nguoi_dung' => $request->ten_nguoi_dung,
             'email' => $request->email,
             'sdt' => $request->sdt ?? '',
@@ -672,9 +672,10 @@ public function vouchersEdit($id)
     public function usersDestroy($id)
     {
         // Xoá người dùng theo ID
-        \App\Models\NguoiDung::destroy($id);
+        NguoiDung::destroy($id);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Xóa người dùng thành công');
     }
+    
 }
