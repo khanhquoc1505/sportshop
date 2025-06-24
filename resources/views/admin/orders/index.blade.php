@@ -9,8 +9,8 @@
       id="orderSearch"
       type="text"
       value="{{ old('search', $search ?? '') }}"
-      placeholder="Tìm kiếm mã đơn hoặc tên khách"
-      class="col-span-1 md:col-span-2 w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+      placeholder="Nhập mã đơn hoặc tên khách"
+      class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
     />
   </div>
 

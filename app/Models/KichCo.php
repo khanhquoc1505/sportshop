@@ -9,10 +9,11 @@ class KichCo extends Model
 {
     protected $table = 'kichco';
     protected $fillable = ['size','loai_size'];
+    public $timestamps = false;
 
     public function sanPhamVariants()
     {
-        return $this->hasMany(sanpham_kichco_mausac::class, 'kichco_id');
+        return $this->hasMany(SanPhamKichCoMauSac::class, 'kichco_id');
     }
 
     public function nhapKhoDetails()

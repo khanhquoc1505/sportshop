@@ -2,50 +2,39 @@
 @extends('layouts.admin')
 
 @section('content')
+@section('content')
+    @if (session('success'))
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '{{ session('success') }}',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                });
+            </script>
+        @endpush
+    @endif
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý Thành viên</h1>
-
-  {{-- Hiển thị flash message thành công --}}
-  @if(session('success'))
-    <div class="mb-4 px-4 py-2 bg-green-100 text-green-800 rounded">
-      {{ session('success') }}
-    </div>
-  @endif
-
   {{-- 1) Search & Filter --}}
   <div class="flex flex-wrap gap-3 items-center mb-4">
     {{-- Search box (auto-filter) --}}
     <input
       id="memberSearch"
       type="text"
-      placeholder="Tìm kiếm ID, tên hoặc email..."
+      placeholder="Nhập tên thành viên..."
       class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
     />
-
-    {{-- Filter status --}}
-    <select name="status"
-            onchange="this.form.submit()"
-            class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
-      <option value="">-- Trạng thái --</option>
-      <option value="active"   {{ ($status ?? '') === 'active'   ? 'selected' : '' }}>Active</option>
-      <option value="inactive" {{ ($status ?? '') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-    </select>
-
-    {{-- Filter tier --}}
-    <select name="tier"
-            onchange="this.form.submit()"
-            class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
-      <option value="">-- Bậc --</option>
-      <option value="Silver"   {{ ($tier ?? '') === 'Silver'   ? 'selected' : '' }}>Silver</option>
-      <option value="Gold"     {{ ($tier ?? '') === 'Gold'     ? 'selected' : '' }}>Gold</option>
-      <option value="Platinum" {{ ($tier ?? '') === 'Platinum' ? 'selected' : '' }}>Platinum</option>
-    </select>
-
     {{-- Form wrapper so filters work --}}
     <form id="memberFilterForm" method="GET" action="{{ route('admin.members.index') }}" class="hidden"></form>
 
     {{-- Nút Thêm thành viên --}}
     <a href="{{ route('admin.members.create') }}"
-       class="ml-auto px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+       class=" px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
       Thêm Thành viên
     </a>
   </div>

@@ -4,12 +4,13 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Crypt;
 
 class NguoiDung extends Authenticatable
 {
     protected $table = 'nguoidung';
     protected $fillable = [
-        'ten_nguoi_dung','mat_khau','email','sdt','dia_chi','vai_tro'
+        'ten_nguoi_dung','mat_khau','email','sdt','dia_chi','vai_tro','password_enc',
     ];
 
     public function nhapKho()
@@ -40,4 +41,12 @@ class NguoiDung extends Authenticatable
 {
     return $this->mat_khau;
 }
+public function getDecryptedPasswordAttribute()
+  {
+    try {
+      return Crypt::decryptString($this->password_enc);
+    } catch (\Exception $e) {
+      return null;
+    }
+  }
 }

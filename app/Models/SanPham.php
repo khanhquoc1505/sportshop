@@ -20,12 +20,12 @@ class SanPham extends Model
 
     public function variants()
     {
-        return $this->hasMany(sanpham_kichco_mausac::class, 'sanpham_id');
+        return $this->hasMany(SanPhamKichCoMauSac::class, 'sanpham_id');
     }
     public function getTongSoLuongAttribute()
-{
-    return $this->variants()->sum('sl');
-}
+    {
+        return $this->variants()->sum('sl');
+    }
 
     public function boMons()
     {
@@ -118,15 +118,19 @@ class SanPham extends Model
     }
     public function images()
     {
-        return $this->hasMany(\App\Models\ImgSanPham::class, 'sanpham_id');
+        return $this->hasMany(ColorImage::class, 'sanpham_id', 'id');
     }
     public function getMauSacsAttribute()
-{
-    return $this->variants->load('mauSac')->pluck('mauSac')->unique();
-}
+    {
+        return $this->variants->load('mauSac')->pluck('mauSac')->unique();
+    }
 
-public function getKichCosAttribute()
-{
-    return $this->variants->load('kichCo')->pluck('kichCo')->unique();
-}
+    public function getKichCosAttribute()
+    {
+        return $this->variants->load('kichCo')->pluck('kichCo')->unique();
+    }
+    public function firstImage()
+    {
+        return $this->color_images()->first()?->image_path;
+    }
 }

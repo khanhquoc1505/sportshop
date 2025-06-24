@@ -20,9 +20,9 @@ class ColorImage extends Model
     ];
 
     // === Quan hệ đến sản phẩm ===
-    public function sanpham()
+    public function product()
     {
-        return $this->belongsTo(Sanpham::class, 'sanpham_id');
+        return $this->belongsTo(SanPham::class, 'sanpham_id', 'id');
     }
 
     // === Quan hệ đến màu sắc ===

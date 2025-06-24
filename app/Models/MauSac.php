@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class MauSac extends Model
 {
     protected $table = 'mausac';
+    public $timestamps = false;
     protected $fillable = ['mausac'];
 
     public function sanPhamVariants()
     {
-        return $this->hasMany(sanpham_kichco_mausac::class, 'mausac_id');
+        return $this->hasMany(SanPhamKichCoMauSac::class, 'mausac_id');
     }
 
     public function nhapKhoDetails()

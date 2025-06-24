@@ -62,6 +62,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product/create', [AdminController::class, 'productCreate'])->name('product.create');
     Route::post('product', [AdminController::class, 'productStore'])->name('product.store');
     Route::delete('product/{id}', [AdminController::class, 'productDestroy'])->name('product.destroy');
+    //Quản lý biển thể sản phẩm
+    Route::get('variants/{variant}/edit', [AdminController::class, 'variantEdit'])->name('variant.edit');
+    Route::patch('variants/{variant}', [AdminController::class, 'variantUpdate'])->name('variant.update');
+    Route::delete('variants/{variant}', [AdminController::class, 'variantDestroy'])->name('variant.destroy');
     //Quản lý người dùng
     Route::get('users', [AdminController::class, 'users'])->name('users.index');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');

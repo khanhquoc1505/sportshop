@@ -20,17 +20,17 @@
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý Voucher</h1>
 
   <div class="flex items-center space-x-2 mb-4">
-    <a href="{{ route('admin.vouchers.create') }}"
-    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-    Thêm Voucher
-    </a>
-
     {{-- Khai báo id cho form --}}
     <form id="filter-form" method="GET" action="{{ route('admin.vouchers.index') }}" class="flex items-center space-x-2">
 
-    <input id="searchInput" type="text" name="search" placeholder="Tìm mã voucher..." value="{{ $search }}"
-      class="px-4 py-2 border rounded focus:outline-none focus:ring w-64" />
+    <input id="searchInput" type="text" name="search" placeholder="Nhập mã voucher..." value="{{ $search }}"
+      class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary" />
     </form>
+    
+    <a href="{{ route('admin.vouchers.create') }}"
+    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+    Thêm Voucher
+    </a>
   </div>
 
   <div id="voucher-list" class="bg-white rounded shadow overflow-x-auto">
