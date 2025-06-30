@@ -126,9 +126,9 @@ class SanPham extends Model
             ->where('is_main', true)
             ->orderBy('id');
     }
-    public function colorImages()
+     public function colorImages()
     {
-        return $this->hasMany(ColorImage::class, 'sanpham_id');
+        return $this->hasMany(ColorImage::class, 'sanpham_id', 'id');
     }
     public function images()
     {

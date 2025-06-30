@@ -69,7 +69,7 @@
       </div>
 
       <div class="ct-action-buttons">
-        <form action="{{ route('cart.add', $product) }}" method="POST">
+        <form action="{{ route('cart.them', $product) }}" method="POST">
           @csrf
           <input type="hidden" name="quantity" id="form-qty" value="1">
           <input type="hidden" name="size" id="selected-size" value="">
@@ -79,7 +79,14 @@
        value="{{ basename($colorVariants[0]['image_url']) }}">
           <button type="submit" class="ct-add-to-cart">Thêm vào giỏ hàng</button>
         </form>
-        <button class="ct-buy-now">Mua ngay</button>
+        <form id="ct-buy-now-form" action="{{ route('cart.buynow') }}" method="POST">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+    <input type="hidden" name="quantity" id="form-qty-buynow" value="1">
+    <input type="hidden" name="size" id="selected-size-buynow" value="">
+    <input type="hidden" name="mausac" id="selected-color-buynow" value="{{ $colorVariants[0]['mausac_id'] }}">
+    <button type="button" id="ct-buy-now-btn">Mua ngay</button>
+</form>
         <form action="{{ route('wishlist.toggle', $product) }}" method="POST">
           @csrf
           <button class="ct-add-to-yt">Yêu thích</button>
@@ -145,4 +152,6 @@
   @endforelse
 
 </div>
+
+
 @endsection

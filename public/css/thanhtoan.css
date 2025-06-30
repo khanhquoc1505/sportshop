@@ -1,0 +1,171 @@
+.tt-checkout-wrapper { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.06); padding: 20px; font-size: 15px; }
+.tt-address-block { background: #fff6f6; padding: 16px 18px; border-radius: 7px; margin-bottom: 16px; }
+.tt-address-title { font-weight: 600; font-size: 18px; color: #ee4d2d; }
+.tt-address-content { margin-top: 6px; }
+.tt-address-detail { margin-left: 5px; color: #333; }
+.tt-address-default { display: inline-block; background: #ee4d2d; color: #fff; font-size: 13px; padding: 1px 6px; border-radius: 4px; margin: 0 5px; }
+.tt-address-change { color: #0066c0; font-size: 14px; margin-left: 15px; }
+
+.tt-product-list { background: #fafafa; border-radius: 6px; margin-bottom: 20px; }
+.tt-product-header, .tt-product-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+.tt-product-header { font-weight: 600; background: #f2f2f2; }
+.tt-col { flex: 1; text-align: left; }
+.tt-col-shop { flex: 3; display: flex; align-items: center; }
+.tt-product-img { border-radius: 4px; margin-right: 12px; }
+.tt-product-name { font-weight: 500; }
+.tt-col-price, .tt-col-total { min-width: 110px; text-align: right; }
+.tt-col-qty { min-width: 80px; text-align: center; }
+
+.tt-note-voucher-row { display: flex; align-items: center; justify-content: space-between; margin: 16px 0; }
+.tt-note-input { width: 45%; padding: 7px 10px; border-radius: 4px; border: 1px solid #ddd; }
+.tt-voucher-block { display: flex; align-items: center; }
+.tt-voucher-label { margin-right: 10px; color: #ee4d2d; }
+.tt-voucher-select { padding: 5px 9px; border-radius: 3px; }
+
+.tt-shipping-row { display: flex; align-items: center; margin: 20px 0; border-bottom: 1px solid #eee; padding-bottom: 14px; }
+.tt-shipping-label { font-weight: 500; margin-right: 18px; }
+.tt-shipping-option { margin-right: 20px; color: #2196f3; }
+.tt-shipping-date { color: #2abb4b; font-size: 13px; margin-left: 4px; }
+.tt-shipping-change { color: #2196f3; margin-left: 12px; font-size: 13px; }
+.tt-shipping-fee { color: #f57224; font-weight: 500; font-size: 16px; }
+
+.tt-payment-summary { max-width: 400px; margin: 22px 0 0 auto; background: #fffefa; border-radius: 6px; padding: 20px; }
+.tt-payment-row { display: flex; justify-content: space-between; margin: 5px 0; }
+.tt-summary-label { color: #333; }
+.tt-summary-discount .tt-summary-value { color: #ee4d2d; }
+.tt-summary-total { font-size: 17px; }
+.tt-summary-value-big { color: #ee4d2d; font-size: 20px; }
+
+.tt-payment-method-row { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 7px; padding: 18px; margin: 28px 0 8px 0; box-shadow: 0 1px 5px #0001; }
+.tt-payment-method-block { flex: 1; }
+.tt-method-label { color: #444; margin-bottom: 4px; }
+.tt-method-choose { color: #2196f3; font-weight: 500; }
+.tt-method-change { color: #2196f3; margin-left: 12px; font-size: 13px; }
+.tt-order-form { margin-left: 16px; }
+.tt-order-btn { background: #ee4d2d; color: #fff; font-weight: 600; border: none; border-radius: 5px; font-size: 17px; padding: 13px 35px; cursor: pointer; }
+.tt-order-btn:hover { background: #d13b18; }
+
+.tt-order-note { color: #aaa; text-align: right; font-size: 13px; margin-top: 8px; }
+.tt-product-img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    background: #fff;
+    margin-right: 12px;
+    vertical-align: middle;
+}
+.tt-product-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+}
+.tt-col-shop {
+    display: flex;
+    align-items: center;
+    flex: 2;
+}
+.tt-product-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #222;
+    margin-left: 8px;
+}
+.tt-col-price,
+.tt-col-qty,
+.tt-col-total {
+    flex: 1;
+    text-align: center;
+    font-size: 15px;
+}
+.tt-product-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+}
+/* ////////////////////////////// */
+.tt-address-block {
+    padding: 14px 18px;
+    border: 1px solid #efefef;
+    border-radius: 8px;
+    background: #fffbe8;
+    margin-bottom: 22px;
+    position: relative;
+}
+.tt-address-title {
+    font-weight: bold;
+    color: #ffab00;
+    margin-bottom: 7px;
+    font-size: 16px;
+}
+.tt-address-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 15px;
+}
+.tt-address-detail {
+    margin-left: 5px;
+    color: #374151;
+}
+.tt-address-default {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 12px;
+    margin-left: 8px;
+}
+.tt-address-change {
+    color: #1d4ed8;
+    text-decoration: underline;
+    margin-left: 12px;
+    cursor: pointer;
+}
+.tt-address-form {
+    margin-top: 14px;
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 7px;
+    box-shadow: 0 1px 6px 0 #e4e8ee;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tt-address-form input, .tt-address-form select {
+    padding: 7px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    min-width: 130px;
+    margin-right: 6px;
+}
+.tt-address-form button {
+    min-width: 70px;
+}
+/* bố cục hàng ngang */
+.tt-pay-form{
+    display:flex;
+    align-items:center;          /* căn giữa theo trục dọc */
+    justify-content:space-between;
+    flex-wrap:wrap;              /* để không tràn trên mobile */
+    gap:1rem;
+    width:100%;
+}
+
+/* khối radio chiếm phần còn lại */
+.payment-radios{
+    flex:1 1 250px;              /* co giãn, tối thiểu 250px */
+}
+
+/* để nút không co nhỏ */
+.tt-order-btn{
+    white-space:nowrap;
+    padding:0.6rem 2.5rem;
+}

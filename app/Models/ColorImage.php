@@ -28,7 +28,7 @@ class ColorImage extends Model
     // === Quan hệ đến màu sắc ===
     public function mausac()
     {
-        return $this->belongsTo(Mausac::class, 'mausac_id');
+        return $this->belongsTo(Mausac::class, 'mausac_id', 'id');
     }
     public function getHinhAnhAttribute()
     {

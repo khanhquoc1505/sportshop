@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/wishlist/toggle/{product}', [ChiTietController::class, 'toggle'])->name('wishlist.toggle');
 });
 Route::post('/product/{product}/danhgia', [ChiTietController::class, 'guidanhgia'])
-    ->name('product.mo_ta');
+    ->name('product.review.store');
 Route::get('product/{id}/mo-ta', [ChiTietController::class, 'moTa'])
     ->name('product.mo_ta');
 ////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,6 @@ Route::middleware('auth')->group(function(){
     // danh sách
     Route::get('/donhang', [CTDonHangController::class, 'donhang'])
          ->name('donhang.index');
-
     // chi tiết
     Route::get('/donhang/{id}', [CTDonHangController::class, 'show'])
          ->name('donhang.show');
@@ -69,21 +68,45 @@ Route::middleware('auth')->group(function(){
 
     // Thêm vào giỏ
     Route::post('/giohang/them/{product}', [AddGioHangController::class, 'themgiohang'])
-         ->name('cart.add');
+         ->name('cart.them');
     // Cập nhật số lượng
     Route::post('/giohang/update/{id}', [AddGioHangController::class, 'update'])
          ->name('cart.update');
     // Xóa item
-    Route::delete('/giohang/remove/{id}', [AddGioHangController::class, 'remove'])
-         ->name('cart.remove');
-    // Thanh toán
+    Route::post('/giohang/remove/{id}',[AddGioHangController::class,'remove'])->whereNumber('id')
+ ->name('cart.remove');
+        
+    // // Thanh toán
+// POST xử lý tăng/giảm/xoá trong luồng “mua ngay”
+    Route::get('giohang/checkout', [AddGioHangController::class, 'checkout'])->name('cart.checkout');
+    Route::get('/giohang/buynow',  [AddGioHangController::class, 'buynow'])
+         ->name('cart.buynow');
+    // Xử lý + / – / remove / chọn-voucher của “mua ngay”
+    Route::post('/giohang/buynow', [AddGioHangController::class, 'buynow']);
+    // Xử lý đặt hàng (COD hoặc VNPay)
     Route::post('/giohang/thanhtoan', [AddGioHangController::class, 'thanhtoan'])
          ->name('cart.thanhtoan');
+
+     Route::post('/nguoidung/update-address', [App\Http\Controllers\AddGioHangController::class, 'updateAddress'])
+    ->name('nguoidung.update_address');
+   
+    
 });
 // chi tiết đon hàng
 Route::post('/danh-gia', [CTDonHangController::class, 'store'])
      ->name('danhgia.store')
      ->middleware('auth');
+
+// Nhóm các route cần xác thực
+Route::middleware(['web', 'auth'])->group(function () {
+    // POST khởi tạo thanh toán VNPAY
+    Route::post('/vnpay_payment', [AddGioHangController::class, 'vnpay_payment'])
+         ->name('vnpay.payment');
+});
+
+// Route callback VNPAY về (GET), vẫn có session vì thuộc web.php, nhưng không yêu cầu login
+Route::get('/vnpay_return', [AddGioHangController::class, 'vnpayReturn'])
+     ->name('vnpay.return');
 
 
 Route::get('layouts/timkiemSP', function () {

@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ asset('css/giohang.css') }}">
   <link rel="stylesheet" href="{{ asset('css/donhang.css') }}">
   <link rel="stylesheet" href="{{ asset('css/ctdonhang.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/thanhtoan.css') }}">
 </head>
 <body>
   <!-- HEADER -->
@@ -163,6 +164,7 @@
     <script src="{{ asset('js/chitiet.js') }}"></script>
     <script src="{{ asset('js/giohang.js') }}"></script>
     <script src="{{ asset('js/ctdonhang.js') }}"></script>
+    <script src="{{ asset('js/thanhtoan.js') }}"></script>
   
 </body>
 </html>

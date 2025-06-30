@@ -68,36 +68,8 @@
       {{-- Voucher & Tổng --}}
       <div class="gt-summary-footer">
         {{-- Chọn voucher --}}
-        <div class="gt-voucher-section">
-          @if($availableVouchers->count())
-            <form method="GET" action="{{ route('cart.index') }}" class="gt-voucher-inline-form">
-              <select name="order_voucher" class="gt-voucher-select">
-                <option value="">-- Chọn voucher --</option>
-                @foreach($availableVouchers as $v)
-                  <option value="{{ $v->id }}" {{ request('order_voucher')==$v->id ? 'selected':'' }}>
-                    {{ $v->ma_voucher }} –
-                    @if($v->loai==='percent')
-                      Giảm {{ $v->soluong }}%
-                    @else
-                      Giảm {{ number_format($v->soluong,0,',','.') }}₫
-                    @endif
-                  </option>
-                @endforeach
-              </select>
-              <button type="submit" class="gt-apply-voucher-btn">Áp dụng</button>
-            </form>
-          @else
-            <p style="color:#777">Không có voucher nào</p>
-          @endif
-        </div>
-
-        {{-- Giảm voucher tổng --}}
-        @if(isset($voucherGiam) && $voucherGiam > 0)
-          <div class="row">
-            <span>Giảm voucher:</span>
-            <span class="discount">-{{ number_format($voucherGiam,0,',','.') }} ₫</span>
-          </div>
-        @endif
+        
+        
 
         {{-- Tổng tiền hàng sau giảm --}}
         <div class="row">
@@ -155,19 +127,7 @@
         <label for="gt-note">Ghi chú</label>
         <textarea id="gt-note" name="ghi_chu" class="gt-form-textarea"></textarea>
       </div>
-
-      <div class="gt-radio-group">
-        <label class="gt-radio-option">
-          <input type="radio" name="pttt" value="cod" checked> COD
-        </label>
-        <label class="gt-radio-option">
-          <input type="radio" name="pttt" value="momo"> Ví MoMo
-        </label>
-      </div>
-
-      <button class="gt-submit-btn" type="submit">ĐẶT HÀNG</button>
-    </form>
-  </section>
-</div>
+      <a href="{{ route('cart.checkout') }}" class="gt-submit-btn">ĐẶT HÀNG</a>
+    </div>
 
 @endsection

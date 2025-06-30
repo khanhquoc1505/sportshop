@@ -17,7 +17,7 @@ class CTDonHangController extends Controller
 
     $orders = DonHang::with('chiTiet.sanPham')
         ->where('nguoidung_id', $user->id)
-        ->where('trangthai', 2)
+        ->whereIn('trangthai', [2, 3])
         ->latest()
         ->get();
 
@@ -33,7 +33,7 @@ public function show($id)
     $order = DonHang::with('chiTiet.sanPham')
         ->where('id', $id)
         ->where('nguoidung_id', $user->id)
-        ->where('trangthai', 2)
+        ->whereIn('trangthai', [2, 3])
         ->firstOrFail();
 
     // vì file nằm layouts/chitietdonhang.blade.php

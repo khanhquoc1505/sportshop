@@ -9,8 +9,11 @@
       $subtotal   = $order->chiTiet->sum(fn($i)=> $i->dongia * $i->soluong);
       $discount   = $order->chiTiet->sum(fn($i)=> $i->item_discount ?? 0);
       $total      = $subtotal - $discount;
-      $firstItem  = $order->chiTiet->first()->sanPham;
-      $otherCount = $order->chiTiet->count() - 1;
+
+      // Thay vì gọi thẳng ->first()->sanPham, chúng ta kiểm tra trước
+      $firstDetail = $order->chiTiet->first();
+      $firstItem   = $firstDetail ? $firstDetail->sanPham : null;
+      $otherCount  = max(0, $order->chiTiet->count() - 1);
     @endphp
 
     <div class="dh-card">
@@ -18,16 +21,22 @@
         <h5 class="dh-card-title">
           {{ $loop->iteration }}. {{ $order->madon }}
           ngày {{ $order->created_at->format('d/m/Y') }}
-          [ -{{ round($discount / max($subtotal,1) * 100) }}% ]
+          [ -{{ $subtotal > 0 ? round($discount / $subtotal * 100) : 0 }}% ]
         </h5>
-        <p class="dh-text-muted dh-mb-3">
-          {{ $firstItem->ten }} / {{ $firstItem->masanpham }}
-          @if($otherCount>0) … và {{ $otherCount }} sản phẩm khác @endif
-        </p>
+
+        @if($firstItem)
+          <p class="dh-text-muted dh-mb-3">
+            {{ $firstItem->ten }} / {{ $firstItem->masanpham }}
+            @if($otherCount>0) … và {{ $otherCount }} sản phẩm khác @endif
+          </p>
+        @else
+          <p class="dh-text-muted dh-mb-3">Không có sản phẩm</p>
+        @endif
+
         <hr>
         <p class="dh-mb-1">
-          Tổng hóa đơn: {{ number_format($subtotal,0,',','.') }} đ 
-          / Thành tiền: {{ number_format($total,0,',','.') }} đ
+          Tổng hóa đơn: {{ number_format($subtotal,0,',','.') }}₫ 
+          / Thành tiền: {{ number_format($total,0,',','.') }}₫
         </p>
         <p class="dh-mb-3">
           Tình trạng đơn hàng:
@@ -38,8 +47,8 @@
         </a>
       </div>
     </div>
-  @empty
+@empty
     <div class="alert alert-secondary">Bạn chưa có đơn hàng nào.</div>
-  @endforelse
+@endforelse
 </div>
 @endsection
