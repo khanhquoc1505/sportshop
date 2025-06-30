@@ -34,5 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    ///thêm chat ai
+    'openai' => [
+    'key' => env('OPENAI_API_KEY'),
+    ],
 ];

@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ChiTietController;
 use App\Http\Controllers\CTDonHangController;
 use App\Http\Controllers\AddGioHangController;
+use App\Http\Controllers\SupportChatController;
 use App\Models\SanPham;
 use App\Models\BoMon;
 
@@ -22,8 +23,9 @@ Route::view('layouts/timkiemSP', 'layouts.timkiem')
 Route::get('/', function () {
     return view('home/trangchu');
 });
-
-
+///////////chat bot
+Route::post('/support/ask', [SupportChatController::class, 'ask'])
+     ->name('support.ask');
 
 Route::get('/', function () {
     $products = SanPham::all();
