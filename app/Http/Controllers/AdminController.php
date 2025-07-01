@@ -10,9 +10,11 @@ use Carbon\Carbon;
 use App\Exports\RevenueExport;
 use Illuminate\Support\Facades\DB;
 use App\Models\SanPham;
+use App\Models\DonHangChiTiet;
 use App\Models\NguoiDung;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Loai;
 use App\Models\DonHang;
 use App\Models\Voucher;
@@ -29,12 +31,45 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        return view('admin.dashboard');
+        //
+        // 1) Top 5 sản phẩm theo số lượng
+        //
+        $topQty = DB::table('donhang_chitiets')           // đổi thành tên bảng chi tiết đơn hàng của bạn
+            ->join('donhang', 'donhang_chitiets.donhang_id', '=', 'donhang.id')
+            ->join('sanpham', 'donhang_chitiets.sanpham_id', '=', 'sanpham.id')
+            ->whereIn('donhang.trangthaidonhang', ['dathanhtoan','hoanthanh'])
+            ->select('sanpham.ten as label', DB::raw('SUM(donhang_chitiets.soluong) as value'))
+            ->groupBy('sanpham.id','sanpham.ten')
+            ->orderByDesc('value')
+            ->limit(5)
+            ->get();
+
+        //
+        // 2) Top 5 sản phẩm theo doanh thu
+        //
+        $topRev = DB::table('donhang_chitiets')
+            ->join('donhang', 'donhang_chitiets.donhang_id', '=', 'donhang.id')
+            ->join('sanpham', 'donhang_chitiets.sanpham_id', '=', 'sanpham.id')
+            ->whereIn('donhang.trangthaidonhang', ['dathanhtoan','hoanthanh'])
+            ->select('sanpham.ten as label', DB::raw('SUM(donhang_chitiets.soluong * donhang_chitiets.dongia) as value'))
+            ->groupBy('sanpham.id','sanpham.ten')
+            ->orderByDesc('value')
+            ->limit(5)
+            ->get();
+
+        // Tách label và data ra mảng riêng
+        $labels      = $topQty->pluck('label');
+        $qtyData     = $topQty->pluck('value');
+        $revenueData = $topRev->pluck('value');
+
+        return view('admin.dashboard', compact('labels','qtyData','revenueData'));
     }
 
     public function product(Request $request)
 {
-    $query = SanPhamKichCoMauSac::with(['product.images', 'kichCo', 'mauSac']);
+    $query = SanPhamKichCoMauSac::with(['product.images', 'kichCo', 'mauSac'])
+     ->orderBy('sanpham_id')
+     ->orderBy('id');
 
     if ($request->filled('search')) {
         $query->whereHas('product', function ($q) use ($request) {
@@ -90,41 +125,83 @@ class AdminController extends Controller
     }
     // Hiển thị form chỉ sửa biến thể
 public function variantEdit($id)
-{
-    $v = SanPhamKichCoMauSac::with(['product','kichCo','mauSac','product.images'])
-        ->findOrFail($id);
+    {
+        $v = SanPhamKichCoMauSac::with(['product'])
+            ->findOrFail($id);
 
-    return view('admin.product.variant-edit', compact('v'));
-}
+        $last = $v->product
+              ->nhapKho()
+              ->latest('ngaynhap')
+              ->first();
 
-// Xử lý cập nhật biến thể
-public function variantUpdate(Request $request, $id)
-{
-    $data = $request->validate([
-        'sl'          => 'required|integer|min:0',
-        'kichco_id'   => 'required|exists:kichco,id',
-        'mausac_id'   => 'required|exists:mausac,id',
-        'hinh_anh'    => 'nullable|image',
-        'trang_thai'  => 'required|in:0,1', // ✅ Bổ sung validate cho trạng thái
-    ]);
+        $giaNhapCu = $last->gianhap ?? null;
 
-    $v = SanPhamKichCoMauSac::findOrFail($id);
-    $v->sl = $data['sl'];
-    $v->kichco_id = $data['kichco_id'];
-    $v->mausac_id = $data['mausac_id'];
-    $v->trang_thai = $data['trang_thai']; // ✅ Bổ sung cập nhật trạng thái
+        // Danh sách loại để select trong form
+        $categories = Loai::where('status', 1)
+                      ->orderBy('loai')
+                      ->get();
 
-    if ($request->hasFile('hinh_anh')) {
-        $path = $request->file('hinh_anh')->store('variants', 'public');
-        $v->hinh_anh = $path;
+        return view('admin.product.variant-edit', compact('v','categories','giaNhapCu'));
     }
 
-    $v->save();
+    public function variantUpdate(Request $request, $id)
+    {
+        $data = $request->validate([
+            // variant fields
+            'sl'        => 'required|integer|min:0',
+            'kichco_id' => 'required|exists:kichco,id',
+            'mausac_id' => 'required|exists:mausac,id',
+            'hinh_anh'  => 'nullable|image|max:2048',
+            'trang_thai'=> 'required|in:0,1',
+            // product‐level fields
+            'gia_nhap'  => 'nullable|numeric|min:0',
+            'gia_ban'   => 'nullable|numeric|min:0',
+            'gia_buon'  => 'nullable|numeric|min:0',
+            'bo_mon'    => 'nullable|string|max:100',
+            'loai_id'   => 'required|exists:loai,id',   // <-- mới
+        ]);
 
-    return redirect()
-        ->route('admin.product.index')
-        ->with('success', 'Cập nhật biến thể thành công');
-}
+        $variant = SanPhamKichCoMauSac::with('product')->findOrFail($id);
+        $prod    = $variant->product;
+        $prod->loais()->sync([$data['loai_id']]);
+
+        // 1) Cập nhật bảng sanpham (tất cả variants dùng chung giá này)
+        $prod = $variant->product;
+        $prod->update([
+            'gia_nhap' => $data['gia_nhap']  ?? $prod->gia_nhap,
+            'gia_ban'  => $data['gia_ban']   ?? $prod->gia_ban,
+            'gia_buon' => $data['gia_buon']  ?? $prod->gia_buon,
+            'bo_mon'   => $data['bo_mon']    ?? $prod->bo_mon,
+        ]);
+
+        // 2) Cập nhật chính biến thể
+        $variant->update([
+            'sl'        => $data['sl'],
+            'kichco_id' => $data['kichco_id'],
+            'mausac_id' => $data['mausac_id'],
+            'trang_thai'=> $data['trang_thai'],
+        ]);
+
+        // 3) Nếu đổi ảnh variant
+        if ($request->hasFile('hinh_anh')) {
+            $path = $request->file('hinh_anh')->store('variants','public');
+            $variant->hinh_anh = $path;
+            $variant->save();
+        }
+        $userId = auth()->id() ?: \App\Models\NguoiDung::first()->id;
+        if ($request->filled('gia_nhap')) {
+        $variant->product->nhapKho()->create([
+            'nguoidung_id'  => $userId, //auth()->id(),
+            'soluongnhap'   => 0,             // hoặc lấy từ 1 ô qty nếu bạn muốn
+            'gianhap'       => $request->gia_nhap,
+            'ngaynhap'      => now(),
+        ]);
+    }
+
+        return redirect()
+            ->route('admin.product.index')
+            ->with('success','Cập nhật biến thể thành công');
+    }
 
 // (Nếu cần) xóa biến thể
 public function variantDestroy($id)
@@ -132,6 +209,152 @@ public function variantDestroy($id)
   SanPhamKichCoMauSac::destroy($id);
   return back()->with('success','Đã xóa biến thể');
 }
+public function productCreate()
+    {
+        return view('admin.product.create', [
+            
+      'kichCoList' => \App\Models\KichCo::all(),
+      'mausacList' => \App\Models\MauSac::all(),
+      'dsLoai'     => \App\Models\Loai::pluck('loai'),
+      'existingNames'=> \App\Models\SanPham::pluck('ten'),
+    ]);
+    }
+    public function getImportPrice(Request $request)
+{
+    $name = $request->query('name');
+    // tìm record sản phẩm theo tên chính xác hoặc bắt đầu bằng...
+    $product = SanPham::where('ten', 'like', "{$name}%")->first();
+
+    if (! $product) {
+        return response()->json(['importPrice' => null, 'sellPrice' => null]);
+    }
+
+    // lấy giá nhập mới nhất từ bảng nhapkho
+    $lastNhap = NhapKho::where('sanpham_id', $product->id)
+                       ->latest('id')
+                       ->first();
+
+    return response()->json([
+        'importPrice' => $lastNhap?->gianhap,
+        'sellPrice'   => $product->gia_ban,
+        'wholesalePrice' => $product->gia_buon,
+    ]);
+}
+    public function productStore(Request $request)
+{
+   $data = $request->validate([
+            // product‐level
+            'ten'         => 'required|string|max:255',
+            'category'    => 'required|string|max:100',
+            'price'       => 'required|numeric|min:0',
+            'gia_buon'    => 'nullable|numeric|min:0',
+            // nhập kho + variant
+            'gia_nhap'    => 'required|numeric|min:0',
+            'import_date' => 'required|date',
+            'qty'         => 'required|integer|min:1',
+            // variant
+            'size'        => 'required|string|max:10',
+            'color'       => 'required|string|max:50',
+            'trang_thai'  => 'required|in:0,1',
+            'images.*'    => 'nullable|image|max:2048',
+        ]);
+
+        // 0) Map category -> prefix
+        $prefixMap = [
+            'Bóng đá'=>'BD', 'Bóng rổ'=>'BR', 'Cầu lông'=>'CL',
+            'Váy cầu lông'=>'VCL', 'Áo'=>'AO', 'Quần'=>'QU', 'Phụ kiện'=>'PK'
+        ];
+        $pre = $prefixMap[$data['category']] ?? 'SP';
+
+        // 1) Lấy hoặc tạo mới sản phẩm theo tên
+        $product = SanPham::firstOrNew(['ten' => $data['ten']]);
+
+        if (!$product->exists) {
+            // a) sinh mã mới
+            $last = SanPham::where('masanpham','like',$pre.'%')
+                           ->orderByDesc('id')->first();
+            $num  = $last
+                  ? intval(preg_replace('/\D/','',$last->masanpham)) + 1
+                  : 1;
+            $product->masanpham     = $pre . str_pad($num, 5, '0', STR_PAD_LEFT);
+            // b) gán các field
+            $product->loai           = $data['category'];
+            $product->gia_ban        = $data['price'];
+            $product->gia_buon       = $data['gia_buon'] ?? 0;
+            $product->thoi_gian_them = now();
+            $product->trang_thai     = 1;
+            $product->save();
+        } else {
+            // Nếu muốn cập nhật lại giá bán / giá buôn khi thêm variant
+            $product->update([
+                'gia_ban'  => $data['price'],
+                'gia_buon' => $data['gia_buon'] ?? $product->gia_buon,
+                'loai'     => $data['category'],
+            ]);
+        }
+
+        // 2) Lưu ảnh nếu có
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $img) {
+                $path = $img->store('public/images');
+                $product->images()->create([
+                    'image_path' => str_replace('public/','storage/',$path),
+                ]);
+            }
+        }
+
+        // 3) FindOrCreate size & color
+        $kc = KichCo::firstOrCreate(
+            ['size' => $data['size']],
+            ['loai_size' => null] // hoặc giá trị mặc định
+        );
+        $ms = MauSac::firstOrCreate(
+            ['mausac' => $data['color']]
+        );
+
+        // 4) Tạo hoặc cập nhật variant (cộng dồn số lượng nếu trùng)
+        SanPhamKichCoMauSac::updateOrCreate(
+            [
+                'sanpham_id' => $product->id,
+                'kichco_id'  => $kc->id,
+                'mausac_id'  => $ms->id,
+            ],
+            [
+                'sl'         => DB::raw("IFNULL(sl,0) + {$data['qty']}"),
+                'trang_thai' => $data['trang_thai'],
+            ]
+        );
+
+        // 5) Ghi nhận nhập kho
+        $userId = auth()->id() ?: \App\Models\NguoiDung::first()->id;
+        $product->nhapKho()->create([
+            'nguoidung_id'  => $userId,
+            'soluongnhap'   => $data['qty'],
+            'gianhap'       => $data['gia_nhap'],
+            'ngaynhap'      => $data['import_date'],
+        ]);
+
+        return redirect()
+            ->route('admin.product.index')
+            ->with('success','Thêm sản phẩm/variant/nhập kho thành công');
+}
+    public function productDestroy($id)
+    {
+        $product = SanPham::with('images')->findOrFail($id);
+
+
+        // Xóa ảnh liên quan nếu có
+        foreach ($product->images as $image) {
+            if (\Storage::exists(str_replace('storage/', 'public/', $image->image_path))) {
+                \Storage::delete(str_replace('storage/', 'public/', $image->image_path));
+            }
+            $image->delete();
+        }
+
+        $product->delete();
+
+        return redirect()->route('admin.product.index')->with('success', 'Đã xóa sản phẩm');
+    }
 
     public function users(Request $request)
     {
@@ -319,6 +542,7 @@ public function variantDestroy($id)
                 );
         }
 
+
         $orders = $query
             ->orderBy('created_at', 'desc')
             ->paginate(15)
@@ -339,50 +563,66 @@ public function variantDestroy($id)
                 'total_amount' => $o->tongtien,
             ];
         });
-
+        $orders = DonHang::query()
+    ->select('donhang.*')
+    // join hoặc withSum tuỳ bạn đặt tên quan hệ items()
+    ->withSum(['items as tongtien' => function($q) {
+        $q->select(DB::raw('SUM(soluong * dongia)'));
+    }], 'soluong')
+    ->paginate(10);
         return view('admin.orders.index', compact('orders'));
     }
     public function ordersShow($id)
-    {
-        $o = DonHang::with([
-            'user',
-            'items.product.colorImages'  // load luôn ảnh
-        ])
-            ->findOrFail($id);
+{
+    $o = DonHang::with(['user', 'items.product.colorImages'])
+               ->findOrFail($id);
 
-        // Build mảng truyền xuống view
-        $order = [
-            'id' => $o->madon,         // giờ dùng mã đơn
-            'created_at' => $o->ngaydat,
-            'delivery_status' => $o->trang_thaigia ?? 'pending',
-            'trangthai' => $o->trangthai,
-            'shipping_method_label' => $o->shipping_method_label,
-            'notes' => $o->notes ?? '',
-            'discount' => $o->discount ?? 0,
-            'shipping_fee' => $o->shipping_fee ?? 0,
-            'total_amount' => $o->tongtien,
-            'paid_amount' => $o->paid_amount ?? 0,
-            'refunded_amount' => $o->refunded_amount ?? 0,
-            'received_amount' => $o->received_amount ?? 0,
-            'customer' => $o->user->ten_nguoi_dung ?? '',
-            'items' => $o->items->map(function ($item) {
-                // tìm ảnh đầu tiên (is_main) hoặc collection đầu tiên
-                $img = optional($item->product->colorImages->first())->image_path;
-                return [
-                    'image_url' => $img
-                        ? asset('storage/' . $img)
-                        : 'https://via.placeholder.com/50',
-                    'name' => $item->product->ten,
-                    'sku' => $item->product->masanpham,
-                    'quantity' => $item->soluong,
-                    'price' => $item->dongia,
-                ];
-            })->toArray(),
+    // build items array
+    $items = $o->items->map(function($item) {
+        $img = optional($item->product->colorImages->first())->image_path;
+        return [
+            'image_url' => $img 
+                ? asset('storage/' . $img) 
+                : 'https://via.placeholder.com/50',
+            'name'     => $item->product->ten,
+            'sku'      => $item->product->masanpham,
+            'quantity' => $item->soluong,
+            'price'    => $item->dongia,
+            'subtotal' => $item->dongia * $item->soluong,
         ];
+    })->toArray();
 
+    // tính các tổng
+    $sumItems   = collect($items)->sum('subtotal');           // tổng tiền hàng
+    $discount   = $o->discount      ?? 0;                     // giảm giá
+    $shipping   = $o->shipping_fee  ?? 0;                     // phí vận chuyển
+    $totalOrder = $sumItems - $discount + $shipping;         // tổng giá trị đơn
+    $paid       = $o->paid_amount   ?? 0;                     // đã thanh toán
+    $refunded   = $o->refunded_amount ?? 0;                   // đã hoàn trả
+    $received   = $o->received_amount ?? 0;                   // thực nhận
 
-        return view('admin.orders.show', compact('order'));
-    }
+    // build array đưa xuống view
+    $order = [
+        'id'                  => $o->madon,
+        'created_at'          => $o->ngaydat,
+        'delivery_status'  => $o->delivery_status,
+        'trangthai'           => $o->trangthai,
+        'shipping_method_label'     => $o->shipping_method_label,
+        'notes'               => $o->notes ?? '',
+        'items'               => $items,
+        // những giá trị tính ra
+        'sum_items'           => $sumItems,
+        'discount'            => $discount,
+        'shipping_fee'        => $shipping,
+        'total_order_value'   => $totalOrder,
+        'paid_amount'         => $paid,
+        'refunded_amount'     => $refunded,
+        'received_amount'     => $received,
+        'customer_name'       => $o->user->ten_nguoi_dung ?? '',
+    ];
+
+    return view('admin.orders.show', compact('order'));
+}
     public function ordersUpdateNotes(Request $request, $madon)
     {
         $request->validate([
@@ -403,51 +643,49 @@ public function variantDestroy($id)
 
 
     public function inventoryIndex(Request $request)
-    {
-        $query = NhapKho::with('sanPham.loais');
+{
+    $perPage = $request->get('perPage', 10);
 
-        // Tìm kiếm theo tên/mã sản phẩm
-        if ($request->filled('search')) {
-            $q = $request->search;
-            $query->whereHas('sanPham', function ($q2) use ($q) {
-                $q2->where('ten', 'like', "%$q%")
-                    ->orWhere('masanpham', 'like', "%$q%");
-            });
-        }
+    $query = SanPham::withSum(['activeVariants as tong_ton'], 'sl')
+                     ->orderBy('ten');
 
-        // Lọc theo loại sản phẩm từ bảng loai
-        if ($request->filled('type')) {
-            $query->whereHas('sanPham.loai', function ($q2) use ($request) {
-                $q2->where('loai', $request->type);
-            });
-        }
-
-        // Lọc ngày
-        if ($request->filled('from_date')) {
-            $query->whereDate('ngaynhap', '>=', $request->from_date);
-        }
-        if ($request->filled('to_date')) {
-            $query->whereDate('ngaynhap', '<=', $request->to_date);
-        }
-
-        // Phân trang
-        $perPage = $request->get('perPage', 10);
-        $items = $query->paginate($perPage)->withQueryString();
-
-        // Lấy danh sách loại sản phẩm để lọc (nếu cần)
-        $dsLoai = \App\Models\Loai::pluck('loai');
-
-        return view('admin.inventory.index', [
-            'items' => $items,
-            'search' => $request->search,
-            'type' => $request->type,
-            'from_date' => $request->from_date,
-            'to_date' => $request->to_date,
-            'perPage' => $perPage,
-            'dsLoai' => $dsLoai,
-        ]);
+    if ($request->filled('search')) {
+        $q = $request->search;
+        $query->where(function ($sub) use ($q) {
+            $sub->where('ten', 'like', "%{$q}%")
+                ->orWhere('masanpham', 'like', "%{$q}%");
+        });
     }
 
+    if ($request->filled('type')) {
+        $query->whereHas('loais', function ($sub) use ($request) {
+            $sub->where('loai', $request->type);
+        });
+    }
+
+    $products = $query
+        ->paginate($perPage)
+        ->withQueryString();
+
+    $dsLoai = \App\Models\Loai::pluck('loai');
+
+    return view('admin.inventory.index', compact(
+        'products','dsLoai','perPage'
+    ) + [
+        'search' => $request->search,
+        'type'   => $request->type,
+    ]);
+}
+public function lastImportPrice($productId)
+{
+    $nhap = \App\Models\NhapKho::where('sanpham_id', $productId)
+                               ->orderByDesc('ngaynhap')
+                               ->first();
+
+    return response()->json([
+        'gianhap' => $nhap->gianhap ?? null,
+    ]);
+}
     public function feedbackIndex(Request $request)
     {
         // 1) Build query với eager-load quan hệ
@@ -592,24 +830,70 @@ public function variantDestroy($id)
             ->with('success', 'Xoá voucher thành công.');
     }
 
-    public function reportrevenue()
+    public function reportRevenue(Request $request)
     {
-        $data = \DB::table('donhang')
-            ->selectRaw('DATE(created_at) as ngay, COUNT(id) as so_don, SUM(tongtien) as tong_doanhthu')
-            ->where('trangthai', 3) // ví dụ: trạng thái 3 là đã hoàn tất
-            ->groupByRaw('DATE(created_at)')
-            ->orderByDesc('ngay')
+        // 1) Lấy query cơ bản: chỉ những đơn "đã thanh toán" hoặc "hoàn thành"
+        $query = DonHang::query()
+            ->whereIn('trangthaidonhang', ['dathanhtoan', 'hoanthanh']);
+
+        // 2) Lọc theo ngày đặt
+        if ($request->filled('start_date')) {
+            $query->whereDate('ngaydat', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('ngaydat', '<=', $request->end_date);
+        }
+
+        // 3) Lọc theo sản phẩm (nếu chọn != all)
+        $productId = $request->get('product_id', 'all');
+        if ($productId !== 'all') {
+            $query->whereHas('items', fn($q) =>
+                $q->where('sanpham_id', $productId)
+            );
+        }
+
+        // 4) Xác định period: day/month/year
+        $period = $request->get('period', 'day');
+        switch ($period) {
+            case 'month':
+                $dateExpr = "DATE_FORMAT(ngaydat, '%Y-%m')";
+                break;
+            case 'year':
+                $dateExpr = "YEAR(ngaydat)";
+                break;
+            default:
+                $dateExpr = "DATE(ngaydat)";
+        }
+
+        // 5) Gom nhóm để lấy data Tổng quan
+        $overview = $query->clone()
+            ->selectRaw("$dateExpr as label")
+            ->selectRaw('COUNT(*) as so_don')
+            ->selectRaw('SUM(tongtien) as tong_doanhthu')
+            ->groupBy('label')
+            ->orderBy('label')
             ->get();
 
-        return view('admin.report.revenue', compact('data'));
+        // 6) Lấy danh sách sản phẩm cho dropdown
+        $products = SanPham::orderBy('ten')->get(['id','ten']);
+
+        // 7) Trả về view
+        return view('admin.report.revenue', compact(
+            'overview',
+            'products',
+            'period',
+            'productId'
+        ));
     }
 
     public function exportRevenue(Request $request)
-    {
-        $data = $this->getRevenueData($request);
-        $fileName = 'revenue_' . now()->format('Ymd_His') . '.xlsx';
-        return Excel::download(new RevenueExport($data), $fileName);
-    }
+{
+    $fileName = 'revenue_'.now()->format('Ymd_His').'.xlsx';
+    return Excel::download(
+        new RevenueExport($request->all()),
+        $fileName
+    );
+}
 
     public function printRevenue(Request $request)
     {
@@ -623,94 +907,6 @@ public function variantDestroy($id)
             ['Date' => '2025-05-01', 'Product' => 'A', 'Quantity' => 5, 'Total' => 500],
             ['Date' => '2025-05-02', 'Product' => 'B', 'Quantity' => 3, 'Total' => 300],
         ];
-    }
-    public function productCreate()
-    {
-        return view('admin.product.create');
-    }
-    public function productStore(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'gia_nhap' => 'nullable|numeric',
-            'price' => 'required|numeric',
-            'qty' => 'required|integer',
-            'size' => 'nullable|string|max:10',
-            'color' => 'nullable|string|max:50',
-            'brand' => 'nullable|string|max:100',
-            'category' => 'required|string|max:100',
-            'import_date' => 'nullable|date',
-            'description' => 'nullable|string',
-            'images.*' => 'nullable|image|max:2048',
-        ]);
-
-        // Map loại sản phẩm sang tiền tố mã
-        $prefixMap = [
-            'Bóng đá' => 'BD',
-            'Bóng rổ' => 'BR',
-            'Cầu lông' => 'CL',
-            'Váy cầu lông' => 'VCL',
-            'Áo' => 'AO',
-            'Quần' => 'QU',
-            'Phụ kiện' => 'PK',
-        ];
-
-        $category = $data['category'];
-        $prefix = $prefixMap[$category] ?? 'SP';
-
-        // Tìm mã sản phẩm cuối cùng
-        $last = \App\Models\SanPham::where('masanpham', 'like', $prefix . '%')
-            ->orderByDesc('masanpham')
-            ->first();
-
-        $number = $last ? ((int) filter_var($last->masanpham, FILTER_SANITIZE_NUMBER_INT) + 1) : 1;
-        $masanpham = $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
-
-        // Tạo sản phẩm
-        $sanPham = SanPham::create([
-            'masanpham' => $masanpham,
-            'ten' => $data['name'],
-            'gia_nhap' => $data['gia_nhap'] ?? 0,
-            'gia_ban' => $data['price'],
-            'so_luong' => $data['qty'],
-            'kich_thuoc' => $data['size'] ?? null,
-            'mau_sac' => $data['color'] ?? null,
-            'bo_mon' => $data['brand'] ?? null,
-            'loai' => $category,
-            'ngay_nhap' => $data['import_date'] ?? now(),
-            'mo_ta' => $data['description'] ?? null,
-            'trang_thai' => 1, // ✅ thêm dòng này
-        ]);
-
-        // Lưu nhiều ảnh nếu có
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $img) {
-                $path = $img->store('public/images');
-                \App\Models\ImgSanPham::create([
-                    'sanpham_id' => $sanPham->id,
-                    'image_path' => str_replace('public/', 'storage/', $path),
-                ]);
-            }
-        }
-
-        return redirect()->route('admin.product.index')->with('success', 'Thêm sản phẩm thành công');
-    }
-    public function productDestroy($id)
-    {
-        $product = SanPham::with('images')->findOrFail($id);
-
-
-        // Xóa ảnh liên quan nếu có
-        foreach ($product->images as $image) {
-            if (\Storage::exists(str_replace('storage/', 'public/', $image->image_path))) {
-                \Storage::delete(str_replace('storage/', 'public/', $image->image_path));
-            }
-            $image->delete();
-        }
-
-        $product->delete();
-
-        return redirect()->route('admin.product.index')->with('success', 'Đã xóa sản phẩm');
     }
     public function usersCreate()
     {

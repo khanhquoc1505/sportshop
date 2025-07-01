@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,16 +13,17 @@ return new class extends Migration
         Schema::create('nhapkho', function (Blueprint $table) {
             $table->id();
             $table->foreignId('nguoidung_id')
-                  ->constrained('nguoidung')
-                  ->cascadeOnDelete();
+                ->constrained('nguoidung')
+                ->cascadeOnDelete();
             $table->foreignId('sanpham_id')
-                  ->constrained('sanpham')
-                  ->cascadeOnDelete();
+                ->constrained('sanpham')
+                ->cascadeOnDelete();
             $table->dateTime('ngaynhap')->useCurrent();
             $table->integer('soluongnhap');
             $table->decimal('gianhap', 12, 2);
             $table->string('ghichu')->nullable();
             $table->timestamps();
+            
         });
     }
 

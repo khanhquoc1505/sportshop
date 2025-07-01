@@ -1,6 +1,22 @@
 @extends('layouts.admin')
 
 @section('content')
+@if (session('success'))
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '{{ session('success') }}',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                });
+            </script>
+        @endpush
+    @endif
 <h1 class="text-3xl font-semibold mb-6">Quản lý sản phẩm</h1>
 
 {{-- Tìm kiếm & bộ lọc --}}
@@ -23,7 +39,7 @@
   </select>
 
   <a href="{{ route('admin.product.create') }}"
-  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+  class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
   Thêm sản phẩm
   </a>  
 </div>

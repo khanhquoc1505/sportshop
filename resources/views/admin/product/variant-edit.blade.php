@@ -1,105 +1,120 @@
-{{-- resources/views/admin/variants-edit.blade.php --}}
 @extends('layouts.admin')
 
 @section('content')
-  <h1 class="text-3xl font-semibold mb-6 text-dark">Chỉnh sửa biến thể sản phẩm {{ $v->product->ten }}</h1>
+  <h1 class="text-3xl font-semibold mb-6">Chỉnh sửa biến thể sản phẩm “{{ $v->product->ten }}”</h1>
 
-  <form method="POST"
-        action="{{ route('admin.variant.update', $v->id) }}"
-        enctype="multipart/form-data"
-        class="bg-white p-6 rounded-xl shadow space-y-4 border border-gray-300"
-  >
+  <form method="POST" action="{{ route('admin.variant.update', $v->id) }}" enctype="multipart/form-data"
+    class="bg-white p-6 rounded-xl shadow space-y-6 border border-gray-300">
     @csrf
     @method('PATCH')
 
-    {{-- Sản phẩm gốc --}}
+    {{-- 1) Thông tin sản phẩm gốc --}}
+    <div class="grid grid-cols-2 gap-6">
     <div>
-      <label class="block mb-1">Sản phẩm</label>
-      <input type="text"
-             value="{{ $v->product->ten}}"
-             class="w-full border px-3 py-2 rounded bg-gray-100"
-             disabled
-      />
+      <label class="block mb-1 font-medium">Sản phẩm</label>
+      <input type="text" value="{{ $v->product->ten }}" class="w-full border px-3 py-2 rounded bg-gray-100" disabled>
     </div>
 
+    {{-- Loại sản phẩm --}}
+    <div>
+      <label class="block mb-1">Loại sản phẩm</label>
+      <select name="loai_id" class="w-full border px-3 py-2 rounded">
+      @foreach($categories as $cat)
+      <option value="{{ $cat->id }}" {{ $v->product->loais->contains('id', $cat->id) ? 'selected':'' }}>
+      {{ $cat->loai }}
+      </option>
+    @endforeach
+      </select>
+    </div>
+
+    {{-- Giá nhập --}}
+    <div>
+      <label class="block mb-1 font-medium">Giá nhập</label>
+      <input type="number" name="gia_nhap" value="{{ old('gia_nhap', $giaNhapCu) }}"
+      class="w-full border px-3 py-2 rounded">
+    </div>
+
+    {{-- Giá bán --}}
+    <div>
+      <label class="block mb-1 font-medium">Giá bán</label>
+      <input type="number" name="gia_ban" value="{{ old('gia_ban', $v->product->gia_ban) }}"
+      class="w-full border px-3 py-2 rounded">
+    </div>
+
+    {{-- Giá bán buôn --}}
+    <div>
+      <label class="block mb-1 font-medium">Giá bán buôn</label>
+      <input type="number" name="gia_buon" value="{{ old('gia_buon', $v->product->gia_buon) }}"
+      class="w-full border px-3 py-2 rounded">
+    </div>
+
+    {{-- Bộ môn --}}
+    <div>
+      <label class="block mb-1 font-medium">Bộ môn</label>
+      <input type="text" name="bo_mon" value="{{ old('bo_mon', $v->product->bo_mon) }}"
+      class="w-full border px-3 py-2 rounded">
+    </div>
+    </div>
+
+    {{-- 2) Thông tin biến thể --}}
+    <div class="grid grid-cols-3 gap-6">
     {{-- Số lượng --}}
     <div>
-      <label class="block mb-1">Số lượng</label>
-      <input type="number"
-             name="sl"
-             value="{{ old('sl', $v->sl) }}"
-             class="w-full border px-3 py-2 rounded"
-      />
+      <label class="block mb-1 font-medium">Số lượng</label>
+      <input type="number" name="sl" value="{{ old('sl', $v->sl) }}" class="w-full border px-3 py-2 rounded">
     </div>
 
     {{-- Size --}}
     <div>
-      <label class="block mb-1">Size</label>
+      <label class="block mb-1 font-medium">Size</label>
       <select name="kichco_id" class="w-full border px-3 py-2 rounded">
-        @foreach(\App\Models\KichCo::all() as $kc)
-          <option value="{{ $kc->id }}"
-                  {{ $v->kichco_id == $kc->id ? 'selected' : '' }}>
-            {{ $kc->size }}
-          </option>
-        @endforeach
+      @foreach(\App\Models\KichCo::all() as $kc)
+      <option value="{{ $kc->id }}" {{ old('kichco_id', $v->kichco_id) == $kc->id ? 'selected' : '' }}>
+      {{ $kc->size }}
+      </option>
+    @endforeach
       </select>
     </div>
 
     {{-- Màu sắc --}}
     <div>
-      <label class="block mb-1">Màu sắc</label>
+      <label class="block mb-1 font-medium">Màu sắc</label>
       <select name="mausac_id" class="w-full border px-3 py-2 rounded">
-        @foreach(\App\Models\MauSac::all() as $m)
-          <option value="{{ $m->id }}"
-                  {{ $v->mausac_id == $m->id ? 'selected' : '' }}>
-            {{ $m->mausac }}
-          </option>
-        @endforeach
+      @foreach(\App\Models\MauSac::all() as $m)
+      <option value="{{ $m->id }}" {{ old('mausac_id', $v->mausac_id) == $m->id ? 'selected' : '' }}>
+      {{ $m->mausac }}
+      </option>
+    @endforeach
       </select>
     </div>
 
-    {{-- Hình ảnh --}}
+    {{-- Ảnh biến thể --}}
     <div>
-      <label class="block mb-1">Hình ảnh (nếu đổi)</label>
+      <label class="block mb-1 font-medium">Hình ảnh (nếu đổi)</label>
       <input type="file" name="hinh_anh" class="block w-full" />
       @if($v->hinh_anh)
-        <img src="{{ asset('storage/'.$v->hinh_anh) }}"
-             class="h-24 mt-2 object-contain rounded border" />
-      @endif
+      <img src="{{ asset('storage/' . $v->hinh_anh) }}" class="h-24 mt-2 object-contain rounded border">
+    @endif
     </div>
 
-    {{-- Trạng thái--}}
-     <div>
-        <label for="trang_thai" class="block mb-1">Trạng thái</label>
-        <select name="trang_thai" id="trang_thai" class="w-full border px-3 py-2 rounded">
-            <option value="1" {{ $v->trang_thai == '1' ? 'selected' : '' }}>Hiển thị</option>
-            <option value="0" {{ $v->trang_thai == '0' ? 'selected' : '' }}>Ẩn</option>
-        </select>
-    </div>
-
-    {{-- Ngày tạo (chỉ xem) --}}
+    {{-- Trạng thái --}}
     <div>
-      <label class="block mb-1">Thời gian thêm</label>
-      <input type="date"
-             value="{{ $v->created_at->format('Y-m-d') }}"
-             class="w-full border px-3 py-2 rounded bg-gray-100"
-             disabled
-      />
+      <label class="block mb-1 font-medium">Trạng thái</label>
+      <select name="trang_thai" class="w-full border px-3 py-2 rounded">
+      <option value="1" {{ old('trang_thai', $v->trang_thai) == '1' ? 'selected' : '' }}>Hiển thị</option>
+      <option value="0" {{ old('trang_thai', $v->trang_thai) == '0' ? 'selected' : '' }}>Ẩn</option>
+      </select>
+    </div>
     </div>
 
-    {{-- Nút hành động --}}
-    <div class="flex space-x-2 mt-6">
-      <button type="submit"
-              onclick="return confirm('Bạn có chắc muốn lưu thay đổi không?')"
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        Lưu thay đổi
-      </button>
-      <a href="{{ route('admin.product.index') }}"
-         class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition"
-      >
-        Hủy
-      </a>
+    {{-- 3) Nút lưu / hủy --}}
+    <div class="flex justify-between">
+    <a href="{{ route('admin.product.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Lưu thay đổi
+    </button>
     </div>
   </form>
 @endsection

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SanPhamKichCoMauSac extends Model
 {
     protected $table = 'sanpham_kichco_mausac';
-    protected $fillable = ['sanpham_id','kichco_id','mausac_id','sl','hinh_anh'];
+    protected $fillable = ['sanpham_id','kichco_id','mausac_id','sl','hinh_anh','trang_thai',];
 
     public function product()
     {

@@ -22,4 +22,8 @@ class DonHangSanPham extends Model
     {
         return $this->belongsTo(SanPham::class, 'sanpham_id');
     }
+    public function sanPham()
+    {
+        return $this->belongsTo(SanPham::class,'sanpham_id');
+    }
 }

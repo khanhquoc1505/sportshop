@@ -50,11 +50,11 @@
         <div>
           <p class="text-sm text-gray-600">Trạng thái Giao hàng</p>
           <div class="mt-1">
-            @if($order['delivery_status'] === 'pending')
+            @if($order['delivery_status'] == 'pending')
               <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ giao</span>
-            @elseif($order['delivery_status'] === 'shipping')
+            @elseif($order['delivery_status'] == 'shipping')
               <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang giao</span>
-            @elseif($order['delivery_status'] === 'delivered')
+            @elseif($order['delivery_status'] == 'delivered')
               <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã giao</span>
             @else
               <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">Đã trả về</span>
@@ -67,23 +67,20 @@
           <p class="text-sm text-gray-600">Trạng thái Thanh toán</p>
           <div class="mt-1">
             @switch($order['trangthai'])
-    @case(2)
-      <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Chưa thanh toán</span>
-      @break
-
-    @case(3)
-      <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đang hoàn tiền</span>
-      @break
-
-    @case(4)
-      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đã hoàn tiền</span>
-      @break
-
-    @case(5)
-      <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
-      @break
-
-    @default
+   @case(2)
+                  <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Chưa thanh toán</span>
+                  @break
+                @case(3)
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
+                  @break
+                @case(4)
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang hoàn tiền</span>
+                  @break
+                @case(5)
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đã hoàn tiền</span>
+                  @break
+                @default
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
       <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
   @endswitch
           </div>
@@ -159,37 +156,42 @@
         </form>
       </div>
 
-      {{-- 5.2. Tổng quan --}}
-      <div class="space-y-2">
-        <p class="text-lg font-semibold">Tổng quan Giá trị</p>
-        <div class="grid grid-cols-2 gap-2 text-gray-700">
-          @php
-            $sumItems = collect($order['items'])
-              ->sum(fn($i) => $i['price'] * $i['quantity']);
-          @endphp
-          <span>Tổng tiền hàng:</span>
-          <span class="font-medium">{{ number_format($sumItems,0,',','.') }}₫</span>
+     {{-- 3. Tổng quan Giá trị --}}
+  <div class="bg-white border border-gray-200 rounded-lg shadow p-6 mt-6">
+    <h2 class="text-xl font-semibold mb-4">Tổng quan Giá trị</h2>
+    <div class="grid grid-cols-2 gap-4 text-gray-700">
+      <div class="flex justify-between">
+        <span>Tổng tiền hàng:</span>
+        <span class="font-medium">{{ number_format($order['sum_items'],0,',','.') }}₫</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Giảm giá:</span>
+        <span class="font-medium">{{ number_format($order['discount'],0,',','.') }}₫</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Phí vận chuyển:</span>
+        <span class="font-medium">{{ number_format($order['shipping_fee'],0,',','.') }}₫</span>
+      </div>
 
-          <span>Giảm giá:</span>
-          <span class="font-medium">{{ number_format($order['discount'],0,',','.') }}₫</span>
+      <div class="col-span-2 border-t pt-2 mt-2 font-semibold flex justify-between">
+        <span>Tổng giá trị đơn hàng:</span>
+        <span>{{ number_format($order['total_order_value'],0,',','.') }}₫</span>
+      </div>
 
-          <span>Phí vận chuyển:</span>
-          <span class="font-medium">{{ number_format($order['shipping_fee'],0,',','.') }}₫</span>
-
-          <span class="text-gray-800">Tổng giá trị đơn hàng:</span>
-          <span class="font-semibold">{{ number_format($order['total_amount'],0,',','.') }}₫</span>
-
-          <span>Đã thanh toán:</span>
-          <span class="font-medium">{{ number_format($order['paid_amount'],0,',','.') }}₫</span>
-
-          <span>Đã hoàn trả:</span>
-          <span class="font-medium">{{ number_format($order['refunded_amount'],0,',','.') }}₫</span>
-
-          <span>Thực nhận:</span>
-          <span class="font-semibold">{{ number_format($order['received_amount'],0,',','.') }}₫</span>
-        </div>
+      <div class="flex justify-between">
+        <span>Đã thanh toán:</span>
+        <span class="font-medium">{{ number_format($order['paid_amount'],0,',','.') }}₫</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Đã hoàn trả:</span>
+        <span class="font-medium">{{ number_format($order['refunded_amount'],0,',','.') }}₫</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Thực nhận:</span>
+        <span class="font-semibold">{{ number_format($order['received_amount'],0,',','.') }}₫</span>
       </div>
     </div>
+  </div>
 
     {{-- 6. Thông tin Người mua & Kho bán (giữ nguyên) --}}
     {{-- … --}}

@@ -74,14 +74,13 @@
     </div>
 
     {{-- Nút lưu/hủy --}}
-    <div class="flex space-x-4">
-      <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-      Lưu Voucher
-      </button>
-      <a href="{{ route('admin.vouchers.index') }}"
-      class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-      Hủy
-      </a>
+    <div class="flex justify-between">
+    <a href="{{ route('admin.vouchers.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Lưu
+    </button>
     </div>
     </form>
   </div>

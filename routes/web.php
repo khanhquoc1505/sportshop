@@ -62,6 +62,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product/create', [AdminController::class, 'productCreate'])->name('product.create');
     Route::post('product', [AdminController::class, 'productStore'])->name('product.store');
     Route::delete('product/{id}', [AdminController::class, 'productDestroy'])->name('product.destroy');
+    Route::get('product/import-price', [AdminController::class, 'getImportPrice'])->name('product.import-price');
     //Quản lý biển thể sản phẩm
     Route::get('variants/{variant}/edit', [AdminController::class, 'variantEdit'])->name('variant.edit');
     Route::patch('variants/{variant}', [AdminController::class, 'variantUpdate'])->name('variant.update');
@@ -99,6 +100,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/members/{id}', [AdminController::class, 'membersDestroy'])->name('members.destroy');
     //Quản lý kho
     Route::get('inventory', [AdminController::class, 'inventoryIndex'])->name('inventory.index');
+    Route::get('inventory/last-import-price/{id}', [AdminController::class, 'lastImportPrice'])->name('inventory.lastImportPrice');
     // Feedback
     Route::get('feedback', [AdminController::class, 'feedbackIndex'])->name('feedback.index');
     Route::post('feedback/{id}/reply', [AdminController::class, 'feedbackReply'])->name('feedback.reply');
