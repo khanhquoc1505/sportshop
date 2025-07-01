@@ -54,12 +54,39 @@
     background: #007bff; color: #fff;
     border: none; border-radius: 4px; cursor: pointer;
   }
+  .chat-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.chat-product-card {
+  display: block;
+  width: 45%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: #fafafa;
+  transition: background .2s;
+}
+.chat-product-card:hover { background: #f0f0f0; }
+.chat-product-card img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+.chat-product-info {
+  padding: 4px;
+  font-size: 13px;
+}
+.chat-prod-name { font-weight: 600; margin-bottom: 4px; }
+.chat-prod-price { color: #d32f2f; }
 </style>
 
 {{-- Overlay --}}
 <div class="modal-overlay"></div>
-
-{{-- Popup chat --}}
 <div class="modal-chat" id="chat-modal">
   <div id="chat-header">
     Hỗ trợ khách hàng
@@ -67,7 +94,7 @@
   </div>
   <div id="chat-body"></div>
   <div id="chat-footer">
-    <input id="chat-input" type="text" placeholder="Nhập tin nhắn...">
+    <input id="chat-input" placeholder="Nhập tin nhắn...">
     <button id="chat-send">Gửi</button>
   </div>
 </div>
@@ -100,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = chatIn.value.trim();
     if (!text) return;
 
-    // Hiển thị tin nhắn user
+    // Bạn
     const u = document.createElement('div');
     u.innerHTML = `<strong>Bạn:</strong> ${text}`;
     chatBody.appendChild(u);
@@ -111,20 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/support/ask', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          'Content-Type':'application/json',
+          'Accept':'application/json',
           'X-CSRF-TOKEN': token
         },
         body: JSON.stringify({ question: text })
       });
       if (!res.ok) throw new Error(`Status ${res.status}`);
-      const { reply } = await res.json();
+      const data = await res.json();
 
-      // Format reply: chuyển newline thành <br> để xuống dòng
-      const b = document.createElement('div');
-      const formatted = reply.replace(/\n/g, '<br>');
-      b.innerHTML = `<strong>Bot:</strong><br>${formatted}`;
-      chatBody.appendChild(b);
+      // Xử lý HTML fragment hoặc text
+      const container = document.createElement('div');
+      if (data.replyHtml) {
+        container.innerHTML = `<strong>Bot:</strong><br>${data.replyHtml}`;
+      } else {
+        const formatted = data.reply.replace(/\n/g,'<br>');
+        container.innerHTML = `<strong>Bot:</strong><br>${formatted}`;
+      }
+      chatBody.appendChild(container);
       chatBody.scrollTop = chatBody.scrollHeight;
 
     } catch (e) {
@@ -142,3 +173,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+

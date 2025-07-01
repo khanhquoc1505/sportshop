@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -106,4 +109,112 @@ public function logout(Request $request)
     return redirect('/'); // về trang chủ
 }
 
+////////////////////////////////////
+// 1. Hiển thị form nhập email/SĐT
+    public function showForgotForm()
+    {
+        return view('layouts.forgot-password');
+    }
+
+    // Bước 2: Xử lý form forgot, kiểm tra login, lưu session, redirect
+    public function sendForgot(Request $request)
+    {
+        $request->validate(['login'=>'required']);
+
+        $user = NguoiDung::where('email',$request->login)
+                        ->orWhere('sdt',$request->login)
+                        ->first();
+
+        if (! $user) {
+            return back()->withErrors(['login'=>'Không tìm thấy tài khoản.']);
+        }
+
+        // Lưu login vào session để dùng ở bước reset
+        session([
+            'reset_login' => $request->login,
+        ]);
+
+        return redirect()->route('password.reset');
+    }
+
+    // Bước 3: Show form reset, sinh mã gacha text-only và lưu vào session
+    public function showResetForm()
+    {
+        $login = session('reset_login','');
+        if (! $login) {
+            return redirect()->route('password.request');
+        }
+
+        // Sinh mã gacha 6 ký tự (chữ HOA + số), lưu session
+        $plainCaptcha = Str::upper(Str::random(6));
+        session(['plain_captcha' => $plainCaptcha]);
+
+        return view('layouts.reset-password', [
+            'login'        => $login,
+            'plainCaptcha' => $plainCaptcha,
+        ]);
+    }
+
+    // Bước 4: Xử lý submit đổi mật khẩu
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'login'                    => 'required',
+            'code'                     => 'required|string|size:6',
+            'new_password'             => 'required|min:6|confirmed',
+        ]);
+
+        // Kiểm tra login khớp session
+        if ($request->login !== session('reset_login')) {
+            return back()->withErrors(['login'=>'Có lỗi, vui lòng thử lại.']);
+        }
+
+        // Kiểm tra mã gacha
+        if (strtoupper($request->code) !== session('plain_captcha')) {
+            return back()->withErrors(['code'=>'Mã gacha không đúng.']);
+        }
+
+        // Tìm user và đổi mật khẩu
+        $user = NguoiDung::where('email',$request->login)
+                        ->orWhere('sdt',$request->login)
+                        ->first();
+
+        //$user->mat_khau = Hash::make($request->new_password);
+        $user->mat_khau = $request->new_password;
+        $user->save();
+
+        // Xóa session tạm
+        session()->forget(['reset_login','plain_captcha']);
+
+        return redirect()->route('login')
+                         ->with('status','Đổi mật khẩu thành công, vui lòng đăng nhập lại.');
+    }
+
+//tìm kiếm
+public function autocomplete(Request $request)
+    {
+        $q = $request->get('q', '');
+        if (strlen($q) < 1) {
+            return response()->json([]);
+        }
+
+        $products = SanPham::with('avatarImage')
+            ->where('ten', 'like', "%{$q}%")
+            ->orWhereHas('bomons', function($qb) use($q) {
+                $qb->where('bomon', 'like', "%{$q}%");
+            })
+            ->take(5)
+            ->get();
+
+        $results = $products->map(function($p) {
+            return [
+                'url' => route('product.show', $p->id),
+                'img' => asset('images/' . optional($p->avatarImage)->image_path ?: 'default.jpg'),
+                'ten' => $p->ten,
+                'gia' => number_format($p->gia_ban,0,',','.'),
+            ];
+        });
+
+        return response()->json($results);
+    }
 }

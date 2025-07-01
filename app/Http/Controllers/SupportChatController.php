@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\ChatService;
 use App\Models\SanPham;
 use App\Models\BoMon;
+use App\Models\GioiTinh;
 
 class SupportChatController extends Controller
 {
@@ -33,7 +34,7 @@ class SupportChatController extends Controller
             Log::info("Ask: {$q}");
 
             // Fallback nếu không match bất kỳ intent nào
-            $reply = "Xin lỗi. Bạn có thể miêu tả chi tiết hơn không ví dụ: “mã sản phẩm BD00011”, bộ môn “bóng chuyền”, “giá dưới 200000”.";
+            $reply = "Xin lỗi. Bạn có thể miêu tả chi tiết hơn không ví dụ: “bóng chuyền”, “giá 200000”.";
 
             // 1. Intent: theo mã sản phẩm
             if (preg_match('/\b([A-Za-z0-9]{3,})\b/', $q, $m_code)) {
@@ -110,6 +111,40 @@ class SupportChatController extends Controller
                 }
                 return $this->formatResponse($reply);
             }
+            if (preg_match('/\b(áo|quần|bộ)\b/ui', $low, $m_type)) {
+                $type = $m_type[1];
+                // Tìm 10 sản phẩm có tên chứa từ này
+                $products = SanPham::where('ten', 'like', "%{$type}%")
+                                   ->take(10)->get();
+                if ($products->isEmpty()) {
+                    $reply = "Hiện không tìm thấy sản phẩm nào chứa “{$type}”.";
+                } else {
+                    $lines = $products->map(fn($p)=>
+                        "{$p->masanpham} ({$p->ten}) - ".number_format($p->gia_ban,0,',','.') . "₫"
+                    )->implode("\n");
+                    $reply = "Các sản phẩm liên quan tới “{$type}”:\n{$lines}\nBạn cần thêm thông tin gì không?";
+                }
+                return $this->formatResponse($reply);
+            }
+            if (preg_match('/\b(nam|nữ|nu)\b/ui', $low, $m_gender)) {
+                // chuẩn hóa
+                $gender = mb_strtolower($m_gender[1], 'UTF-8');
+                // Lấy danh sách sản phẩm theo relation
+                $products = SanPham::whereHas('gioiTinhs', function($qg) use($gender) {
+                    $qg->where('gioitinh', 'like', "%{$gender}%");
+                })->take(10)->get();
+
+                if ($products->isEmpty()) {
+                    $reply = "Chưa có sản phẩm nào dành cho “{$gender}”.";
+                } else {
+                    $lines = $products->map(fn($p)=>
+                        "{$p->masanpham} ({$p->ten}) - ".number_format($p->gia_ban,0,',','.') . "₫"
+                    )->implode("\n");
+                    $reply = "Sản phẩm dành cho “{$gender}”:\n{$lines}\nBạn cần thêm gì không?";
+                }
+                return $this->formatResponse($reply);
+            }
+
 
             // Nếu không trả sau 3 intent, gửi fallback
             return $this->formatResponse($reply);
@@ -142,4 +177,13 @@ class SupportChatController extends Controller
         }
         return response()->json(['reply'=>$reply], 200);
     }
+    protected function html(string $html)
+{
+    return response()->json(['replyHtml' => $html], 200);
+}
+
+/**
+ * Xây dựng HTML cards cho mảng SanPham.
+ */
+
 }

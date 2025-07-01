@@ -1,0 +1,59 @@
+.fg-container {
+    max-width: 700px;
+    margin: 50px auto;
+    padding: 0 20px;
+    font-family: Arial, sans-serif;
+  }
+  .fg-title {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .fg-hr {
+    border: 0;
+    border-top: 1px solid #e3dccd;
+    margin-bottom: 30px;
+  }
+  .fg-alert {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+  .fg-alert ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .fg-form {}
+  .fg-group {
+    margin-bottom: 24px;
+  }
+  .fg-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 16px;
+    border: 1px solid #e3dccd;
+    border-radius: 2px;
+    box-sizing: border-box;
+  }
+
+  .fg-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: #d81f5b;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .fg-btn:hover {
+    background: #b71c4a;
+  }

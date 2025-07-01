@@ -8,6 +8,8 @@
 
   <link rel="stylesheet" href="{{ asset('css/viewdangnhap.css') }}">
   <link rel="stylesheet" href="{{ asset('css/quenmatkhau.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/quenmk1.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/quenmk2.css') }}">
 </head>
 <body>
   <header class="login-header">

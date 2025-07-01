@@ -43,13 +43,32 @@ Route::post('/product/{product}/danhgia', [ChiTietController::class, 'guidanhgia
 Route::get('product/{id}/mo-ta', [ChiTietController::class, 'moTa'])
     ->name('product.mo_ta');
 ////////////////////////////////////////////////////////////////////////
+Route::get('/product/autocomplete', [HomeController::class, 'autocomplete'])
+     ->name('product.autocomplete');
 Route::get('/dangky', [HomeController::class, 'showRegisterForm'])->name('dangky.form');
 Route::post('/dangky', [HomeController::class, 'dangky'])->name('dangky');
-
+//////đăng nhập đăng ký quên mật khẩu
 Route::get('/dangnhap', [HomeController::class, 'showLoginForm'])->name('login');
 Route::post('/dangnhap', [HomeController::class, 'login'])->name('login');
-
 Route::post('/dang-xuat', [HomeController::class, 'logout'])->name('logout');
+// Không cần middleware đặc biệt, hoặc dùng 'guest' nếu chỉ cho user chưa đăng nhập
+Route::middleware('guest')->group(function(){
+    // Bước 1: form nhập email/SĐT
+    Route::get('password/forgot', [HomeController::class, 'showForgotForm'])
+         ->name('password.request');
+
+    // Bước 2: kiểm tra login tồn tại, lưu session và redirect sang bước reset
+    Route::post('password/forgot', [HomeController::class, 'sendForgot'])
+         ->name('password.email');
+
+    // Bước 3: show form reset (sinh random captcha text-only)
+    Route::get('password/reset', [HomeController::class, 'showResetForm'])
+         ->name('password.reset');
+
+    // Bước 4: xử lý đổi mật khẩu
+    Route::post('password/reset', [HomeController::class, 'resetPassword'])
+         ->name('password.update');
+});
 ////////////////////////////////////////////////////////////////////////
 //chi tiết đơn hàng
 Route::middleware('auth')->group(function(){

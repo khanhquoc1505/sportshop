@@ -10,7 +10,15 @@
   <label for="password">Mật khẩu</label>
   <input type="password" name="mat_khau" required>
 
-  <input type="checkbox" name="remember"> Ghi nhớ
+  <div class="form-footer">
+    <input type="checkbox" name="remember" id="remember">
+    <label for="remember">Ghi nhớ</label>
+
+    {{-- Nút quên mật khẩu --}}
+    <a href="{{ route('password.request') }}" class="fg-forgot-link">
+  Quên mật khẩu?
+</a>
+  </div>
   <button type="submit">Đăng nhập</button>
 </form>
 

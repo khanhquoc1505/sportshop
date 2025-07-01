@@ -7,6 +7,7 @@
   <title>Trang chủ</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
   <link rel="stylesheet" href="{{ asset('css/timkiem.css') }}">
   <link rel="stylesheet" href="{{ asset('css/trangchu.css') }}">
   <link rel="stylesheet" href="{{ asset('css/chitiet.css') }}">
@@ -16,6 +17,7 @@
   <link rel="stylesheet" href="{{ asset('css/thanhtoan.css') }}">
 </head>
 <body>
+  
   <!-- HEADER -->
 <header class="header-container">
   <div class="header-left">
@@ -64,16 +66,19 @@
 </nav>
 
 <!-- Search Box -->
-<div class="header-search">
-  <form action="{{ route('product.search') }}" method="GET" class="search-form">
+<div class="header-search" style="position: relative;">
+  <form action="{{ route('product.search') }}" method="GET" autocomplete="off">
     <input
+      id="search-input"
       type="text"
       name="q"
       placeholder="Tìm kiếm sản phẩm..."
       value="{{ request('q','') }}"
+      data-url="{{ route('product.autocomplete') }}"
     >
     <button type="submit">🔍</button>
   </form>
+  <div id="search-suggestions" class="suggestions-box"></div>
 </div>
   <div class="header-right">
   <div class="relative inline-block">
