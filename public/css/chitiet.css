@@ -288,6 +288,33 @@
   color: #4b5563;
   font-size: 0.95rem;
 }
+.ct-review-images {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ct-review-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.ct-review-reply {
+  background: #f9f9f9;
+  border-left: 3px solid #3498db;
+  padding: 10px 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+.ct-review-reply-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #3498db;
+}
+.ct-review-reply-text {
+  color: #333;
+}
 
 /* Responsive */
 @media (max-width: 768px) {

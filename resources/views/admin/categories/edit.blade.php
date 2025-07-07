@@ -57,15 +57,13 @@
     </div>
 
     {{-- Nút Lưu & Hủy --}}
-    <div class="pt-4 space-x-4">
-      <button type="submit"
-              class="px-6 py-2 bg-gray-400 rounded hover:bg-gray-300">
-        Lưu
-      </button>
-      <a href="{{ route('admin.categories.index') }}"
-         class="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400">
-        Hủy
-      </a>
+    <div class="flex justify-between">
+    <a href="{{ route('admin.categories.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Cập nhật
+    </button>
     </div>
   </form>
 @endsection

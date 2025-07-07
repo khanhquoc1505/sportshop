@@ -23,7 +23,7 @@
     <div class="flex items-center space-x-2 mb-4">
         {{-- ô Search --}}
         <input id="categorySearch" type="text" placeholder="Nhập tên danh mục"
-            class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary w-1/3" />
+            class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary" />
         {{-- Nút Thêm --}}
         <a href="{{ route('admin.categories.create') }}"
             class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">

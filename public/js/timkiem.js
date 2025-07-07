@@ -59,3 +59,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 });
+document.querySelectorAll('.filter-title').forEach(el => {
+    el.addEventListener('click', () => {
+      el.closest('.filter-section').classList.toggle('open');
+    });
+  });

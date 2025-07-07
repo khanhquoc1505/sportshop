@@ -1,59 +1,132 @@
-.fg-container {
-    max-width: 700px;
-    margin: 50px auto;
-    padding: 0 20px;
-    font-family: Arial, sans-serif;
-  }
-  .fg-title {
-    font-size: 32px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  .fg-hr {
-    border: 0;
-    border-top: 1px solid #e3dccd;
-    margin-bottom: 30px;
-  }
-  .fg-alert {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 12px;
-    border-radius: 4px;
-    margin-bottom: 24px;
-  }
-  .fg-alert ul {
-    margin: 0;
-    padding-left: 20px;
-  }
+/* auth.css */
 
-  .fg-form {}
-  .fg-group {
-    margin-bottom: 24px;
-  }
-  .fg-input {
-    width: 100%;
-    height: 48px;
-    padding: 0 16px;
-    font-size: 16px;
-    border: 1px solid #e3dccd;
-    border-radius: 2px;
-    box-sizing: border-box;
-  }
+/* === Reset & Base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background-color: #f5f7fa;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: #333;
+  line-height: 1.5;
+}
 
-  .fg-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    background: #d81f5b;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 500;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    text-transform: uppercase;
-  }
-  .fg-btn:hover {
-    background: #b71c4a;
-  }
+/* === Primary Color === */
+:root {
+  --primary: #3498db;
+  --primary-dark: #217dbb;
+  --border: #dce4ec;
+  --alert-error-bg: #fdecea;
+  --alert-error-border: #e74c3c;
+  --alert-success-bg: #e8f8f5;
+  --alert-success-border: #2ecc71;
+}
+
+/* === Containers === */
+.fg-container,
+.ch-container,
+.cf-container {
+  max-width: 400px;
+  margin: 60px auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 30px 25px;
+}
+
+/* === Titles & HR === */
+.fg-title, .ch-title, .cf-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 10px;
+}
+.fg-hr, .ch-hr, .cf-hr {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  margin: 15px 0 25px;
+}
+
+/* === Alerts === */
+.fg-alert, .ch-alert-danger, .cf-alert-danger {
+  background-color: var(--alert-error-bg);
+  border-left: 4px solid var(--alert-error-border);
+  color: var(--alert-error-border);
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+.ch-alert-success, .cf-alert-success {
+  background-color: var(--alert-success-bg);
+  border-left: 4px solid var(--alert-success-border);
+  color: var(--alert-success-border);
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+/* === Forms & Groups === */
+.fg-form, .ch-form, .cf-form {
+  display: flex;
+  flex-direction: column;
+}
+.fg-group, .ch-group, .cf-group {
+  margin-bottom: 15px;
+}
+
+/* === Inputs === */
+.fg-input, .ch-input, .cf-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.fg-input:focus,
+.ch-input:focus,
+.cf-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 4px rgba(52,152,219,0.3);
+}
+
+/* === Buttons === */
+.fg-btn,
+.ch-btn,
+.cf-btn {
+  padding: 12px;
+  background-color: var(--primary);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+.fg-btn:hover,
+.ch-btn:hover,
+.cf-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+.fg-btn:active,
+.ch-btn:active,
+.cf-btn:active {
+  transform: translateY(0);
+}
+
+/* === Utility Icons (FontAwesome assumed) === */
+.fg-title i,
+.ch-title i,
+.cf-title i,
+.fg-btn i,
+.ch-btn i,
+.cf-btn i {
+  margin-right: 6px;
+  vertical-align: middle;
+}

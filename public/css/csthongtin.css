@@ -1,0 +1,290 @@
+/* ======================================================
+   csthongtin.css
+   Toàn bộ CSS cho trang Hồ Sơ, đã prefix "ff-" và bật flex
+   ====================================================== */
+
+/* --- 1. Bật flex cho layout chính --- */
+.ff-profile-container .ff-profile-row {
+  display: flex;
+  align-items: flex-start; /* canh top */
+  gap: 2rem;               /* khoảng cách giữa hai cột */
+  padding: 6rem;
+  padding-top: 2rem;
+}
+.ff-profile-container .ff-profile-row {
+  flex: 3;
+}
+.ff-profile-container .ff-profile-main {
+  flex: 3;        /* main chiếm phần còn lại */
+}
+
+/* ========== FF SIDEBAR ========== */
+.ff-profile-sidebar .card {
+  background: transparent;
+  border: none;
+  margin-bottom: 1rem;
+}
+.ff-profile-sidebar .card-body {
+  padding: 1.5rem;
+  text-align: center;
+}
+.ff-profile-sidebar .tt-avatar-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 9999px;
+  border: 2px solid #e5e5e5;
+}
+.ff-profile-sidebar .tt-username {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  color: #1f2937;
+}
+.ff-profile-sidebar .tt-edit-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+.ff-profile-sidebar .tt-edit-link i {
+  margin-right: 0.25rem;
+}
+.ff-profile-sidebar .tt-edit-link:hover {
+  color: #374151;
+}
+
+.ff-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ff-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+.ff-menu-icon {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  color: #f53d2d; /* mặc định đỏ */
+}
+/* nếu cần đổi màu icon theo thứ tự: nth-child */
+.ff-menu-item:nth-child(3) .ff-menu-icon { color: #3b82f6; }
+.ff-menu-item:nth-child(4) .ff-menu-icon { color: #10b981; }
+.ff-menu-item:nth-child(5) .ff-menu-icon { color: #8b5cf6; }
+
+.ff-menu-item a {
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+.ff-menu-item a:hover {
+  color: #1f2937;
+}
+
+.ff-submenu {
+  list-style: disc;
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+}
+.ff-submenu li {
+  margin: 0.25rem 0;
+}
+.ff-submenu a {
+  font-size: 0.875rem;
+  color: #374151;
+  text-decoration: none;
+}
+.ff-submenu a:hover {
+  color: #1f2937;
+}
+
+/* ========== FF MAIN PROFILE FORM ========== */
+.ff-profile-main .tt-form-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  padding: 2rem;
+}
+.ff-profile-main h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #111827;
+}
+.ff-profile-main .text-muted {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 0.9375rem;
+}
+.ff-profile-main hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 1.5rem 0;
+}
+
+.ff-form-group {
+  margin-bottom: 1.5rem;
+}
+.ff-form-group label {
+  font-weight: 500;
+  color: #374151;
+}
+.ff-form-group input[type="text"],
+.ff-form-group input[type="email"],
+.ff-form-group input[type="file"] {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  color: #1f2937;
+}
+.ff-form-group input:disabled {
+  background-color: #f9fafb;
+}
+.ff-form-group input:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.5);
+}
+
+.ff-form-group small.form-text {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.ff-avatar-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 9999px;
+  border: 2px solid #e5e5e5;
+}
+.ff-avatar-btn {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #374151;
+}
+.ff-avatar-btn:hover {
+  background: #f9fafb;
+}
+
+.ff-save-btn {
+  background-color: #ef4444;
+  color: #ffffff;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+.ff-save-btn:hover {
+  background-color: #dc2626;
+}
+.ff-profile-container .ff-profile-row > .ff-profile-sidebar {
+  flex: 1.5;
+  padding-top: 1rem;
+  padding-left: 2rem;
+
+}
+
+.ff-profile-container .ff-profile-row > .ff-profile-main {
+  flex: 6;
+}
+/* ========== Phân 2 cột trong form ========== */
+.ff-form-inner {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+
+}
+
+/* Cột trái: các input fields */
+.ff-form-left {
+  flex: 2;
+  min-width: 220px;
+}
+
+/* Cột phải: avatar */
+.ff-form-right {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  
+}
+/* placeholder circle khi chưa có ảnh */
+.ff-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e0;
+  font-size: 2rem;
+  margin: 0 auto; /* canh giữa */
+}
+.ff-form-card {
+  border-left: 1px solid;
+    padding-left: 1rem;
+}
+/* ảnh thật */
+.ff-avatar-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #e5e5e5;
+  display: block;
+  margin: 0 auto;
+}
+
+/* nút chọn ảnh */
+.ff-avatar-btn {
+ 
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ff-avatar-btn:hover {
+  background: #f9fafb;
+}
+
+
+/* Trên màn hình nhỏ (<768px), xếp chồng 2 cột */
+@media (max-width: 767px) {
+  .ff-form-inner {
+    display: block;
+  }
+  .ff-form-left {
+    width: 100%;
+    min-width: auto;
+  }
+  .ff-form-right {
+    width: 100%;
+    min-width: auto;
+  }
+}

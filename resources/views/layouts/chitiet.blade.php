@@ -30,7 +30,7 @@
       <div class="ct-product-meta">
         <p><strong>Mã sản phẩm:</strong> {{ $product->masanpham }}</p>
         <p><strong>Trạng thái:</strong>
-          {{ $product->trang_thai==='active'?'Hết hàng':'Còn hàng' }}
+          {{ $inStock ? 'Còn hàng' : 'Hết hàng' }}
         </p>
       </div>
       <div class="ct-product-price">
@@ -69,29 +69,47 @@
       </div>
 
       <div class="ct-action-buttons">
-        <form action="{{ route('cart.them', $product) }}" method="POST">
-          @csrf
-          <input type="hidden" name="quantity" id="form-qty" value="1">
-          <input type="hidden" name="size" id="selected-size" value="">
-          <input type="hidden" id="selected-color" name="mausac" 
-       value="{{ $colorVariants[0]['mausac_id'] }}">
-        <input type="hidden" id="selected-image" name="hinh_anh" 
-       value="{{ basename($colorVariants[0]['image_url']) }}">
-          <button type="submit" class="ct-add-to-cart">Thêm vào giỏ hàng</button>
-        </form>
-        <form id="ct-buy-now-form" action="{{ route('cart.buynow') }}" method="POST">
+  {{-- Thêm vào giỏ hàng --}}
+  <form action="{{ route('cart.them', $product) }}" method="POST">
+    @csrf
+    <input type="hidden" name="quantity" id="form-qty" value="1">
+    <input type="hidden" name="size" id="selected-size" value="">
+    <input type="hidden" id="selected-color" name="mausac"
+           value="{{ $colorVariants[0]['mausac_id'] }}">
+    <input type="hidden" id="selected-image" name="hinh_anh"
+           value="{{ basename($colorVariants[0]['image_url']) }}">
+    <button
+      type="submit"
+      class="ct-add-to-cart"
+      @if(! $inStock) disabled style="opacity:0.5;cursor:not-allowed;" @endif
+    >
+      {{ $inStock ? 'Thêm vào giỏ hàng' : 'Hết hàng' }}
+    </button>
+  </form>
+
+  {{-- Mua ngay --}}
+  <form id="ct-buy-now-form" action="{{ route('cart.buynow') }}" method="POST">
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">
     <input type="hidden" name="quantity" id="form-qty-buynow" value="1">
     <input type="hidden" name="size" id="selected-size-buynow" value="">
-    <input type="hidden" name="mausac" id="selected-color-buynow" value="{{ $colorVariants[0]['mausac_id'] }}">
-    <button type="button" id="ct-buy-now-btn">Mua ngay</button>
-</form>
-        <form action="{{ route('wishlist.toggle', $product) }}" method="POST">
-          @csrf
-          <button class="ct-add-to-yt">Yêu thích</button>
-        </form>
-      </div>
+    <input type="hidden" name="mausac" id="selected-color-buynow"
+           value="{{ $colorVariants[0]['mausac_id'] }}">
+    <button
+      type="button"
+      id="ct-buy-now-btn"
+      @if(! $inStock) disabled style="opacity:0.5;cursor:not-allowed;" @endif
+    >
+      Mua ngay
+    </button>
+  </form>
+
+  {{-- Yêu thích thì vẫn cho phép --}}
+  <form action="{{ route('wishlist.toggle', $product) }}" method="POST">
+    @csrf
+    <button class="ct-add-to-yt">Yêu thích</button>
+  </form>
+</div>
     </div>
   </div>
 
@@ -106,24 +124,40 @@
       {!! $product->mo_ta !!}
     </div>
     <div id="danhsach" class="ct-tab-content">
-      <h3>Đánh giá gần đây</h3>
-      @forelse($product->danhGias as $dg)
-        <div class="ct-review-item">
-          <div class="ct-review-name">{{ $dg->user->ten_nguoi_dung ?? 'Khách' }}</div>
-          <span class="ct-stars">{{ str_repeat('★', $dg->sosao) }}</span>
-          <div class="ct-review-text">{{ $dg->noi_dung ?? '' }}</div>
-          @if(!empty($dg->hinh_anh) && is_array($dg->hinh_anh))
-          <div class="ct-review-images">
-            @foreach($dg->hinh_anh as $img)
-              <img src="{{ asset('storage/'.$img) }}" alt="Review image" class="ct-review-image">
-            @endforeach
-          </div>
-        @endif
+  <h3>Đánh giá gần đây</h3>
+
+  @forelse($product->danhGias as $dg)
+    <div class="ct-review-item">
+      <div class="ct-review-header">
+        <span class="ct-review-name">{{ $dg->user->ten_nguoi_dung ?? 'Khách' }}</span>
+        <span class="ct-stars">{{ str_repeat('★', $dg->sosao) }}</span>
+        <span class="ct-review-date">{{ optional($dg->created_at)->format('d/m/Y') }}</span>
+      </div>
+
+      <div class="ct-review-text">{{ $dg->noi_dung }}</div>
+
+      @if(!empty($dg->hinh_anh) && is_array($dg->hinh_anh))
+        <div class="ct-review-images">
+          @foreach($dg->hinh_anh as $img)
+            <img src="{{ asset('storage/'.$img) }}"
+                 alt="Review image"
+                 class="ct-review-image">
+          @endforeach
         </div>
-      @empty
-        <p>Chưa có đánh giá nào.</p>
-      @endforelse
+      @endif
+
+      {{-- Hiển thị reply nếu đã có --}}
+      @if(!empty($dg->is_replied) && $dg->is_replied)
+        <div class="ct-review-reply">
+          <div class="ct-review-reply-label">Phản hồi từ cửa hàng:</div>
+          <div class="ct-review-reply-text">{{ $dg->reply }}</div>
+        </div>
+      @endif
     </div>
+  @empty
+    <p>Chưa có đánh giá nào.</p>
+  @endforelse
+</div>
   </div>
 
   {{-- Sản phẩm liên quan --}}

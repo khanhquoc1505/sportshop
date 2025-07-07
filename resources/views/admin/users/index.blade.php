@@ -21,10 +21,10 @@
 
   {{-- Tìm kiếm --}}
   <div class="mb-4">
-    <input type="text" id="searchInput" placeholder="Nhập tên người dùng..."class="mb-4 px-4 py-2 border border-gray-300 rounded w-1/3 focus:outline-none focus:ring">
+    <input type="text" id="searchInput" placeholder="Nhập tên người dùng..."class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary">
     <a href="{{ route('admin.users.create') }}"
-   class="px-4 py-2 mb-4 inline-block bg-blue-500 text-white rounded hover:bg-blue-600">
-   + Thêm người dùng
+   class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+   Thêm người dùng
 </a>
   </div>
 
@@ -59,7 +59,7 @@
       {{ ucfirst($u['vai_tro']) }}
       </span>
       </td>
-      <td class="px-4 py-2">{{ $u['mat_khau'] }}</td>
+      <td class="px-4 py-2">{{ $u->decrypted_password ?? '—' }}</td>
       <td class="px-4 py-2 text-sm">
       {{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y H:i') }}
       </td>

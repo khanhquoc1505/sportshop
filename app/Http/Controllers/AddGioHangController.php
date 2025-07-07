@@ -290,8 +290,25 @@ class AddGioHangController extends Controller
             'mausac'     => $item['mausac'],
             'hinh_anh'   => $item['hinh_anh'],
         ]);
-    }
+        // 2) Lookup mã kích cỡ
+    $sizeId = DB::table('kichco')
+               ->where('size', $item['size'])
+               ->value('id');
+    // Lookup mã màu sắc
+    $colorId = DB::table('mausac')
+                 ->where('mausac', $item['mausac'])
+                 ->value('id');
 
+    // 3) Nếu tìm ra cả 2 thì trừ sl
+    if ($sizeId && $colorId) {
+      DB::table('sanpham_kichco_mausac')
+        ->where('sanpham_id', $item['sanpham_id'])
+        ->where('kichco_id',  $sizeId)
+        ->where('mausac_id',  $colorId)
+        ->decrement('sl',     $item['quantity']);
+    }
+    }
+    
     // 4) Tính lại summary
     $donHang->load('chiTiet');
     $summary = $this->buildSummaryFromCart($donHang->chiTiet, $request->order_voucher);
@@ -545,8 +562,26 @@ return redirect()->away($redirectUrl);
                 'mausac'     => $item['mausac']?? null,
                 'hinh_anh'   => $item['image'] ?? null,
             ]);
+           // 2) Lookup mã kích cỡ
+            $sizeId = DB::table('kichco')
+               ->where('size', $item['size'])
+               ->value('id');
+            // Lookup mã màu sắc
+            $colorId = DB::table('mausac')
+                 ->where('mausac', $item['mausac'])
+                 ->value('id');
+
+            // 3) Nếu tìm ra cả 2 thì trừ sl
+            if ($sizeId && $colorId) {
+                DB::table('sanpham_kichco_mausac')
+                ->where('sanpham_id', $item['id'])
+                ->where('kichco_id',  $sizeId)
+                ->where('mausac_id',  $colorId)
+                ->decrement('sl',     $item['quantity']);
+            }
         }
     });
+    
     Auth::loginUsingId($pending['user_id']);
     // 2.4. Clear session và show view success
     Session::forget('pending_order');

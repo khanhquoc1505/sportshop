@@ -9,8 +9,8 @@
       id="orderSearch"
       type="text"
       value="{{ old('search', $search ?? '') }}"
-      placeholder="Tìm kiếm mã đơn hoặc tên khách"
-      class="col-span-1 md:col-span-2 w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+      placeholder="Nhập mã đơn hoặc tên khách"
+      class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
     />
   </div>
 
@@ -56,13 +56,13 @@
                   <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Chưa thanh toán</span>
                   @break
                 @case(3)
-                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đang hoàn tiền</span>
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
                   @break
                 @case(4)
-                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đã hoàn tiền</span>
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang hoàn tiền</span>
                   @break
                 @case(5)
-                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã thanh toán</span>
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đã hoàn tiền</span>
                   @break
                 @default
                   <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
@@ -71,7 +71,7 @@
 
             {{-- Trạng thái Đơn --}}
             <td class="px-4 py-2">
-              @switch($o['order_status'])
+              @switch($o->trangthaidonhang)
                 @case('dadathang')
                   <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đã đặt hàng</span>
                   @break
@@ -124,8 +124,8 @@
             </td>
 
             {{-- Tổng tiền --}}
-            <td class="px-4 py-2">
-              {{ number_format($o['total_amount'], 0, ',', '.') }}
+            <td class="px-4 py-2">  
+              {{ number_format($o->tongtien, 0, ',', '.') }}₫
             </td>
 
             {{-- Xóa --}}

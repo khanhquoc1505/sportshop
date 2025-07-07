@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PasswordChangeCodeMail;
+use App\Services\OtpService; // Service chung
 
 class HomeController extends Controller
 {
@@ -21,6 +24,7 @@ class HomeController extends Controller
     {
         // Lấy products kèm ảnh đại diện
         $products = SanPham::with('avatarImage')->get();
+        //$products = SanPham::with('avatarImage')->paginate(8);
         // Nếu bạn cần tabs theo bộ môn
         $bomons   = BoMon::with('sanPhams')->get();
 
@@ -28,49 +32,116 @@ class HomeController extends Controller
     
     }
 
-    public function dangky(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'ten_nguoi_dung' => 'required|string|max:255',
-        'email' => 'nullable|email|unique:nguoidung,email',
-        'sdt' => 'nullable|digits:10|unique:nguoidung,sdt',
-        'dia_chi' => 'nullable|string|max:255',
-        'mat_khau' => 'required|string|min:6|confirmed',
-    ], [
-        'email.unique' => 'Email đã tồn tại trong hệ thống.',
-        'sdt.unique' => 'Số điện thoại đã tồn tại trong hệ thống.',
-        'mat_khau.confirmed' => 'Mật khẩu xác nhận không khớp.',
-        'mat_khau.min' =>'mật khẩu không ít hơn 6'
-    ]);
-
-    // ✨ Gắn nhãn tiếng Việt cho các field
-    $validator->setAttributeNames([
-        'ten_nguoi_dung' => 'họ và tên',
-        'email' => 'email',
-        'sdt' => 'số điện thoại',
-        'dia_chi' => 'địa chỉ',
-        'mat_khau' => 'mật khẩu',
-        'mat_khau_confirmation' => 'xác nhận mật khẩu',
-    ]);
-
-    if (!$request->email && !$request->sdt) {
-        return back()->withErrors(['email' => 'Phải nhập ít nhất Email hoặc Số điện thoại.'])->withInput();
+    // 1️⃣ Hiển thị form đăng ký
+    public function showRegisterForm()
+    {
+        return view('layouts.dangky');
     }
+
+    // 2️⃣ Xử lý form đăng ký: validate, lưu session tạm và gửi OTP
+    public function processRegister(Request $request)
+    {
+        $validator = Validator::make(
+        $request->all(),
+        [
+            'ten_nguoi_dung' => 'required|string|max:255',
+            'email'          => 'required|email|unique:nguoidung,email',
+            'sdt'            => 'required|digits:10|unique:nguoidung,sdt',
+            'dia_chi'        => 'nullable|string|max:255',
+            'mat_khau'       => 'required|string|min:6|confirmed',
+        ],
+        // ——— Các thông báo tiếng Việt ———
+        [
+            'ten_nguoi_dung.required' => 'Bạn phải nhập họ và tên.',
+            'ten_nguoi_dung.string'   => 'Họ và tên không hợp lệ.',
+            'ten_nguoi_dung.max'      => 'Họ và tên không được vượt quá :max ký tự.',
+
+            'email.required'          => 'Bạn phải nhập email.',
+            'email.email'             => 'Email không đúng định dạng.',
+            'email.unique'            => 'Email đã được sử dụng.',
+
+            'sdt.required'            => 'Bạn phải nhập số điện thoại.',
+            'sdt.digits'              => 'Số điện thoại phải gồm đúng :digits chữ số.',
+            'sdt.unique'              => 'Số điện thoại đã được sử dụng.',
+
+            'dia_chi.string'          => 'Địa chỉ không hợp lệ.',
+            'dia_chi.max'             => 'Địa chỉ không được vượt quá :max ký tự.',
+
+            'mat_khau.required'       => 'Bạn phải nhập mật khẩu.',
+            'mat_khau.string'         => 'Mật khẩu không hợp lệ.',
+            'mat_khau.min'            => 'Mật khẩu phải có ít nhất :min ký tự.',
+            'mat_khau.confirmed'      => 'Xác nhận mật khẩu không khớp.',
+        ]
+    );
+
+    // Đổi tên trường hiển thị
+    $validator->setAttributeNames([
+        'ten_nguoi_dung' => 'Họ và tên',
+        'email'          => 'Email',
+        'sdt'            => 'Số điện thoại',
+        'dia_chi'        => 'Địa chỉ',
+        'mat_khau'       => 'Mật khẩu',
+        'mat_khau_confirmation' => 'Xác nhận mật khẩu',
+    ]);
 
     if ($validator->fails()) {
         return back()->withErrors($validator)->withInput();
     }
 
-    NguoiDung::create([
-        'ten_nguoi_dung' => $request->ten_nguoi_dung,
-        'email' => $request->email,
-        'sdt' => $request->sdt,
-        'dia_chi' => $request->dia_chi,
-        'mat_khau' => $request->mat_khau,
-        'vai_tro' => 'customer',
+        // Lưu tạm dữ liệu đăng ký (mật khẩu đã hash)
+        session(['reg_data' => [
+            'ten_nguoi_dung' => $request->ten_nguoi_dung,
+            'email'          => $request->email,
+            'sdt'            => $request->sdt,
+            'dia_chi'        => $request->dia_chi,
+            'mat_khau'       => $request->mat_khau,
+            'vai_tro'        => 'customer',
+        ]]);
+
+        // Tạo và lưu OTP vào session
+        $otp = rand(100000, 999999);
+    session([
+        'reg_otp'           => $otp,
+        'reg_otp_expires'   => Carbon::now()->addMinutes(10)->timestamp, // lưu timestamp
     ]);
 
-    return redirect()->route('login.form')->with('success', 'Đăng ký thành công!');
+    Mail::to($request->email)
+        ->send(new PasswordChangeCodeMail($request->ten_nguoi_dung, $otp));
+
+    return redirect()->route('dangky.confirm.form')
+                     ->with('status','Mã xác nhận đã được gửi tới email của bạn.');
+    }
+
+    // 3️⃣ Hiển thị form nhập OTP
+    public function showRegisterConfirm()
+    {
+        if (! session()->has('reg_data')) {
+            return redirect()->route('dangky.form')
+                             ->withErrors(['otp' => 'Yêu cầu đăng ký đã hết hạn.']);
+        }
+        return view('layouts.xacnhan');
+    }
+
+    // 4️⃣ Xác nhận OTP và tạo tài khoản
+    public function confirmRegister(Request $request)
+{
+    $request->validate(['otp' => 'required|digits:6']);
+
+    $expires = session('reg_otp_expires');
+    $nowTs   = Carbon::now()->timestamp;
+
+    if (! $expires || $nowTs > $expires || session('reg_otp') != $request->otp) {
+        return back()->withErrors(['otp' => 'Mã không đúng hoặc đã hết hạn.']);
+    }
+
+    // Tạo user từ session('reg_data')
+    NguoiDung::create(session('reg_data'));
+
+    // Xóa session tạm
+    session()->forget(['reg_data','reg_otp','reg_otp_expires']);
+
+    return redirect()->route('login')
+                     ->with('success','Đăng ký thành công! Vui lòng đăng nhập.');
 }
 
 public function login(Request $request)
@@ -84,6 +155,16 @@ public function login(Request $request)
 
     // Tìm người dùng theo email hoặc sdt
     $nguoidung = NguoiDung::where($login_type, $request->login)->first();
+    if (! $nguoidung) {
+        return back()
+            ->withErrors(['login' => 'Tài khoản không tồn tại'])
+            ->withInput();
+    }
+    if ($nguoidung->mat_khau !== $request->mat_khau) {
+        return back()
+            ->withErrors(['mat_khau' => 'Sai mật khẩu'])
+            ->withInput();
+    }
 
     // So sánh mật khẩu đúng y như người dùng nhập (không mã hóa)
     if ($nguoidung && $nguoidung->mat_khau === $request->mat_khau) {
@@ -111,110 +192,87 @@ public function logout(Request $request)
 
 ////////////////////////////////////
 // 1. Hiển thị form nhập email/SĐT
-    public function showForgotForm()
-    {
-        return view('layouts.forgot-password');
+    // Bước 2: Hiển thị và xử lý form nhập email/SĐT
+    // 1️⃣ Form nhập email/SĐT
+public function showForgotForm()
+{
+    return view('layouts.forgot-password');
+}
+
+public function processForgot(Request $request)
+{
+    $request->validate(['login'=>'required']);
+    $user = NguoiDung::where('email',$request->login)
+                    ->orWhere('sdt',$request->login)
+                    ->first();
+    if (!$user) {
+        return back()->withErrors(['login'=>'Không tìm thấy tài khoản.']);
+    }
+    session(['reset_login' => $request->login]);
+    return redirect()->route('password.change.form');
+}
+
+// 2️⃣ Form nhập mật khẩu mới
+public function showChangeForm()
+{
+    if (!session('reset_login')) {
+        return redirect()->route('password.request');
+    }
+    return view('layouts.change-password');
+}
+
+public function sendResetCode(Request $request)
+{
+    $request->validate([
+        'new_password' => 'required|min:6|confirmed'
+    ],[
+        'new_password.confirmed'=>'Xác nhận mật khẩu không khớp.'
+    ]);
+
+    //session(['new_hashed' => Hash::make($request->new_password)]);
+    session(['new_plain_password' => $request->new_password]);
+
+    $code = rand(100000, 999999);
+    session(['otp_code' => $code]);
+
+    $user = NguoiDung::where('email', session('reset_login'))
+                    ->orWhere('sdt', session('reset_login'))
+                    ->first();
+
+    Mail::to($user->email)
+        ->send(new PasswordChangeCodeMail($user->ten_nguoi_dung, $code));
+
+    return redirect()->route('password.confirm.form')
+                     ->with('status','Mã xác nhận đã được gửi về email của bạn.');
+}
+
+// 3️⃣ Form nhập OTP
+public function showConfirmForm()
+{
+    if (!session('reset_login') || !session('new_plain_password')) {
+        return redirect()->route('password.request');
+    }
+    return view('layouts.confirm-code');
+}
+
+public function confirmReset(Request $request)
+{
+    $request->validate(['code'=>'required|digits:6']);
+
+    if ($request->code != session('otp_code')) {
+        return back()->withErrors(['code'=>'Mã xác nhận không đúng.']);
     }
 
-    // Bước 2: Xử lý form forgot, kiểm tra login, lưu session, redirect
-    public function sendForgot(Request $request)
-    {
-        $request->validate(['login'=>'required']);
+    $user = NguoiDung::where('email', session('reset_login'))
+                    ->orWhere('sdt', session('reset_login'))
+                    ->first();
+    //$user->mat_khau = session('new_hashed');
+    $user->mat_khau = session('new_plain_password');
+    $user->save();
 
-        $user = NguoiDung::where('email',$request->login)
-                        ->orWhere('sdt',$request->login)
-                        ->first();
+    session()->forget(['reset_login','new_hashed','otp_code']);
 
-        if (! $user) {
-            return back()->withErrors(['login'=>'Không tìm thấy tài khoản.']);
-        }
-
-        // Lưu login vào session để dùng ở bước reset
-        session([
-            'reset_login' => $request->login,
-        ]);
-
-        return redirect()->route('password.reset');
-    }
-
-    // Bước 3: Show form reset, sinh mã gacha text-only và lưu vào session
-    public function showResetForm()
-    {
-        $login = session('reset_login','');
-        if (! $login) {
-            return redirect()->route('password.request');
-        }
-
-        // Sinh mã gacha 6 ký tự (chữ HOA + số), lưu session
-        $plainCaptcha = Str::upper(Str::random(6));
-        session(['plain_captcha' => $plainCaptcha]);
-
-        return view('layouts.reset-password', [
-            'login'        => $login,
-            'plainCaptcha' => $plainCaptcha,
-        ]);
-    }
-
-    // Bước 4: Xử lý submit đổi mật khẩu
-    public function resetPassword(Request $request)
-    {
-        $request->validate([
-            'login'                    => 'required',
-            'code'                     => 'required|string|size:6',
-            'new_password'             => 'required|min:6|confirmed',
-        ]);
-
-        // Kiểm tra login khớp session
-        if ($request->login !== session('reset_login')) {
-            return back()->withErrors(['login'=>'Có lỗi, vui lòng thử lại.']);
-        }
-
-        // Kiểm tra mã gacha
-        if (strtoupper($request->code) !== session('plain_captcha')) {
-            return back()->withErrors(['code'=>'Mã gacha không đúng.']);
-        }
-
-        // Tìm user và đổi mật khẩu
-        $user = NguoiDung::where('email',$request->login)
-                        ->orWhere('sdt',$request->login)
-                        ->first();
-
-        //$user->mat_khau = Hash::make($request->new_password);
-        $user->mat_khau = $request->new_password;
-        $user->save();
-
-        // Xóa session tạm
-        session()->forget(['reset_login','plain_captcha']);
-
-        return redirect()->route('login')
-                         ->with('status','Đổi mật khẩu thành công, vui lòng đăng nhập lại.');
-    }
-
-//tìm kiếm
-public function autocomplete(Request $request)
-    {
-        $q = $request->get('q', '');
-        if (strlen($q) < 1) {
-            return response()->json([]);
-        }
-
-        $products = SanPham::with('avatarImage')
-            ->where('ten', 'like', "%{$q}%")
-            ->orWhereHas('bomons', function($qb) use($q) {
-                $qb->where('bomon', 'like', "%{$q}%");
-            })
-            ->take(5)
-            ->get();
-
-        $results = $products->map(function($p) {
-            return [
-                'url' => route('product.show', $p->id),
-                'img' => asset('images/' . optional($p->avatarImage)->image_path ?: 'default.jpg'),
-                'ten' => $p->ten,
-                'gia' => number_format($p->gia_ban,0,',','.'),
-            ];
-        });
-
-        return response()->json($results);
-    }
+    return redirect()->route('login')
+                     ->with('status','Đổi mật khẩu thành công, vui lòng đăng nhập lại.');
+}
 }

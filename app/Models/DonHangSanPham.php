@@ -39,6 +39,7 @@ class DonHangSanPham extends Model
         return $this->belongsTo(SanPham::class, 'sanpham_id');
     }
 
+
     public function mauSac()
     {
         // cột `mausac` trong pivot lưu id của bảng mau_sacs
@@ -50,4 +51,5 @@ class DonHangSanPham extends Model
         // cột `size` trong pivot lưu size (hoặc id)
         return $this->belongsTo(KichCo::class, 'size', 'size');
     }
+    
 }

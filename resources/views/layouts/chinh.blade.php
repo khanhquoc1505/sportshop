@@ -25,22 +25,73 @@
   <main class="product-grid">
   @forelse($products as $product)
     @php
-      // Lấy file ảnh hoặc fallback
-      $file = optional($product->avatarImage)->image_path ?? 'default.jpg';
-      $imgPath = asset('images/' . $file);
+      $file    = optional($product->avatarImage)->image_path ?: 'default.jpg';
+      $imgPath = asset('images/'.$file);
     @endphp
 
-    <a href="{{ route('product.show', $product) }}" class="product-card">
-      <img src="{{ $imgPath }}" alt="{{ $product->ten }}" class="product-card-img">
+    <div class="product-card">
+      <a href="{{ route('product.show', $product) }}"
+         class="product-card-img-wrapper"
+         title="{{ $product->ten }}">
+        <img src="{{ $imgPath }}"
+             alt="{{ $product->ten }}"
+             class="product-card-img">
+      </a>
+
       <div class="product-info">
-        <h3 class="product-title">{{ $product->ten }}</h3>
-        <p class="product-price">{{ number_format($product->gia_ban,0,',','.') }} đ</p>
+        <h3 class="product-title"
+            title="{{ $product->ten }}">
+          {{ \Illuminate\Support\Str::limit($product->ten, 30) }}
+        </h3>
+
+        <div class="product-meta">
+          <span class="product-price">
+            {{ number_format($product->gia_ban,0,',','.') }}đ
+          </span>
+          <div class="product-actions">
+            <form action="{{ route('wishlist.toggle', $product) }}"
+      method="POST"
+      class="favorite-form">
+  @csrf
+  <button type="submit" class="favorite-btn">
+    <i class="{{ $product->isFavorited() ? 'fas' : 'far' }} fa-heart"></i>
+  </button>
+</form>
+
+            
+          </div>
+        </div>
       </div>
-    </a>
+    </div>
   @empty
     <p>Chưa có sản phẩm nào.</p>
   @endforelse
 </main>
+{{-- Phân trang --}}
+<nav class="pagination-wrapper">
+  {{-- Previous --}}
+  @if ($products->onFirstPage())
+    <span class="page-link disabled">‹</span>
+  @else
+    <a class="page-link" href="{{ $products->previousPageUrl() }}" rel="prev">‹</a>
+  @endif
+
+  {{-- Số trang --}}
+  @for ($i = 1; $i <= $products->lastPage(); $i++)
+    @if ($i == $products->currentPage())
+      <span class="page-link active">{{ $i }}</span>
+    @else
+      <a class="page-link" href="{{ $products->url($i) }}">{{ $i }}</a>
+    @endif
+  @endfor
+
+  {{-- Next --}}
+  @if ($products->hasMorePages())
+    <a class="page-link" href="{{ $products->nextPageUrl() }}" rel="next">›</a>
+  @else
+    <span class="page-link disabled">›</span>
+  @endif
+</nav>
 
 <!-- HTML Tabs + Product Slider -->
 <div class="tab-product-container">

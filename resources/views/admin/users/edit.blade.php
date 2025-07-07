@@ -42,10 +42,13 @@
       <option value="customer" {{ $user['vai_tro'] == 'customer' ? 'selected' : '' }}>Customer</option>
     </select>
     </div>
-    <div class="flex space-x-2 pt-4">
-    <button type="submit" onclick="return confirm('Xác nhận cập nhật người dùng?')"
-      class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Lưu</button>
-    <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Hủy</a>
+    <div class="flex justify-between">
+    <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Lưu
+    </button>
     </div>
   </form>
 @endsection

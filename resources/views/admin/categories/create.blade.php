@@ -48,15 +48,13 @@
     </div>
 
     {{-- Nút Thêm --}}
-    <div class="pt-4">
-      <button type="submit"
-              class="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">
-        Thêm danh mục
-      </button>
-      <a href="{{ route('admin.categories.index') }}"
-         class="ml-4 px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">
-        Hủy
-      </a>
+    <div class="flex justify-between">
+    <a href="{{ route('admin.categories.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Thêm Danh Mục
+    </button>
     </div>
   </form>
 @endsection

@@ -50,13 +50,13 @@
       </select>
     </div>
 
-    <div class="flex space-x-2 pt-4">
-      <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        Thêm
-      </button>
-      <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-        Hủy
-      </a>
+    <div class="flex justify-between">
+    <a href="{{ route('admin.users.index') }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition">
+      ← Quay lại
+    </a>
+    <button type="submit" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+      Thêm
+    </button>
     </div>
   </form>
 @endsection

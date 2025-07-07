@@ -19,7 +19,8 @@ class ChiTietController extends Controller
         'colorImages',   // chứa cả hinh_anh
         'boMons'       // belongsToMany BoMon → để lấy sản phẩm cùng môn
     ])->findOrFail($id);
-        
+    $totalStock = $product->variants->sum('sl');
+    $inStock = $totalStock > 0;
     // 1) Thumbnails
     $thumbnails = $product->colorImages
     ->pluck('image_path')
@@ -63,7 +64,7 @@ class ChiTietController extends Controller
     }
 
     return view('layouts.chitiet', compact(
-        'product', 'thumbnails','allColorImages', 'colorVariants', 'sizes', 'related'
+        'product', 'thumbnails','allColorImages', 'colorVariants', 'sizes', 'related','inStock'
     ));
 }
 

@@ -40,7 +40,25 @@
         </p>
         <p class="dh-mb-3">
           Tình trạng đơn hàng:
-          <span class="dh-badge dh-bg-success">Hoàn thành</span>
+          @php
+            // map trạng thái string -> CSS class hoặc label nếu cần
+            $labels = [
+              0 => 'Đã hủy',
+              2 => 'Chưa thanh toán',
+              3 => 'Đã thanh toán',
+              ];
+            $classes = [
+              0 => 'dh-bg-danger',
+              2 => 'dh-bg-primary',
+              3 => 'dh-bg-success',
+              ];
+            $status = $order->trangthai;       // string lấy từ DB
+            $text   = $labels[$status]  ?? 'Không xác định';
+            $class  = $classes[$status] ?? 'dh-bg-secondary';
+          @endphp
+          <span class="dh-badge {{ $classes[$order->trangthai] }}">
+            {{ $labels[$order->trangthai] }}
+          </span>
         </p>
         <a href="{{ route('donhang.show', $order->id) }}" class="dh-btn dh-btn-info">
           Xem chi tiết

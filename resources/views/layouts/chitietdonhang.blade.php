@@ -13,7 +13,27 @@
 
   <h1 class="ct-title">Mã đơn: {{ $order->madon }}</h1>
   <p class="ct-subtext">Ngày đặt hàng: {{ $order->created_at->format('d/m/Y') }}</p>
-  <p class="ct-subtext">Trạng thái: Hoàn thành</p>
+  @php
+            // map trạng thái string -> CSS class hoặc label nếu cần
+            $labels = [
+              'chuadathang' => 'Chưa thanh toán',
+              'dathanhtoan' => 'Đã thanh toán',
+              'hoanthanh'   => 'Hoàn thành',
+              'huy'          => 'Đã hủy',
+            ];
+            $classes = [
+              'chuadathang' => 'dh-bg-warning',
+              'dathanhtoan' => 'dh-bg-warning',
+              'hoanthanh'   => 'dh-bg-success',
+              'huy'   => 'dh-bg-success',
+            ];
+            $st = $order->trangthaidonhang;       // string lấy từ DB
+            $text  = $labels[$st]  ?? ucfirst($st);
+            $class = $classes[$st] ?? 'dh-bg-secondary';
+          @endphp
+          <span class="dh-badge {{ $class }}">
+            {{ $labels[$order->trangthaidonhang] ?? ucfirst($order->trangthaidonhang) }}
+          </span>
 
   <h2 class="ct-section-title">Chi tiết đơn hàng</h2>
   <div class="ct-order-details">
@@ -98,7 +118,16 @@
       <div class="ct-summary-value">{{ number_format($finalTotal,0,',','.') }}₫</div>
     </div>
   </div>
+  {{-- Hiển thị flash message --}}
+{{-- chỉ hiện khi chuadathang hoặc dathanhtoan --}}
+@if((int)$order->trangthai === 2)
+  <form action="{{ route('donhang.cancel', $order->id) }}"
+        method="POST"
+        onsubmit="return confirm('Bạn chắc chắn muốn hủy?');">
+    @csrf
+    @method('PATCH')
+    <button class="btn btn-danger">Hủy đơn hàng</button>
+  </form>
+@endif
 </div>
-
-
 @endsection

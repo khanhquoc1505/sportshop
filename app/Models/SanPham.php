@@ -17,6 +17,7 @@ use App\Models\YeuThich;
 use App\Models\Blog;
 use App\Models\ColorImage;
 use App\Models\ImgSanPham;
+use Illuminate\Support\Facades\Auth;
 
 class SanPham extends Model
 {
@@ -26,6 +27,8 @@ class SanPham extends Model
         'ten',
         'mo_ta',
         'gia_ban',
+        'gia_nhap',
+        'gia_buon',
         'hinh_anh',
         'trang_thai',
         'thoi_gian_them'
@@ -33,12 +36,12 @@ class SanPham extends Model
 
     public function variants()
     {
-        return $this->hasMany(sanpham_kichco_mausac::class, 'sanpham_id');
+        return $this->hasMany(SanPhamKichCoMauSac::class, 'sanpham_id');
     }
     public function getTongSoLuongAttribute()
-{
-    return $this->variants()->sum('sl');
-}
+    {
+        return $this->variants()->sum('sl');
+    }
 
     public function boMons()
     {
@@ -132,15 +135,50 @@ class SanPham extends Model
     }
     public function images()
     {
-        return $this->hasMany(ImgSanPham::class, 'sanpham_id');
+
+        //return $this->hasMany(ImgSanPham::class, 'sanpham_id');
+
+        return $this->hasMany(ColorImage::class, 'sanpham_id', 'id');
+
     }
     public function getMauSacsAttribute()
-{
-    return $this->variants->load('mauSac')->pluck('mauSac')->unique();
-}
+    {
+        return $this->variants->load('mauSac')->pluck('mauSac')->unique();
+    }
 
-public function getKichCosAttribute()
-{
-    return $this->variants->load('kichCo')->pluck('kichCo')->unique();
-}
+    public function getKichCosAttribute()
+    {
+        return $this->variants->load('kichCo')->pluck('kichCo')->unique();
+    }
+    public function firstImage()
+    {
+        return $this->color_images()->first()?->image_path;
+    }
+    public function loai()
+    {
+        return $this->belongsToMany(
+            Loai::class,       // model Loai
+            'loai_sanpham',                // bảng pivot
+            'sanpham_id',                  // khóa ngoại trên pivot trỏ về SanPham
+            'loai_id'                      // khóa ngoại trên pivot trỏ về Loai
+        );
+    }
+    public function banHang()
+    {
+        return $this->hasMany(DonhangSanpham::class, 'sanpham_id');
+    }
+    public function activeVariants()
+    {
+        return $this->variants()
+                    ->where('trang_thai', 1);
+    }
+    public function isFavorited(): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+        return $this->yeuThichs()
+                    ->where('nguoidung_id', Auth::id())
+                    ->exists();
+    }
 }

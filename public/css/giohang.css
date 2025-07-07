@@ -121,9 +121,15 @@
   font-weight: 500;
 }
 .gt-form-input,
-.gt-form-select,
 .gt-form-textarea {
-  width: 100%;
+  width: 95%;
+  padding: 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+.gt-form-select{
+  width: 99%;
   padding: 0.7rem;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -160,7 +166,7 @@
 /* Nút Đặt hàng */
 .gt-submit-btn {
   display: block;
-  width: 100%;
+  width: 95%;
   padding: 1rem;
   background: #00acc1;
   color: #fff;

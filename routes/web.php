@@ -8,6 +8,8 @@ use App\Http\Controllers\ChiTietController;
 use App\Http\Controllers\CTDonHangController;
 use App\Http\Controllers\AddGioHangController;
 use App\Http\Controllers\SupportChatController;
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\CSThongTinController;
 use App\Models\SanPham;
 use App\Models\BoMon;
 
@@ -23,12 +25,27 @@ Route::view('layouts/timkiemSP', 'layouts.timkiem')
 Route::get('/', function () {
     return view('home/trangchu');
 });
-///////////chat bot
-Route::post('/support/ask', [SupportChatController::class, 'ask'])
-     ->name('support.ask');
+
+// 1) Form Đăng ký (GET)
+Route::get('/dangky', [HomeController::class, 'showRegisterForm'])
+     ->name('dangky.form');
+
+// 2) Xử lý gửi OTP (POST)
+Route::post('/dangky', [HomeController::class, 'processRegister'])
+     ->name('dangky.process');
+
+// 3) Form nhập OTP (GET)
+Route::get('/dangky/xac-nhan', [HomeController::class, 'showRegisterConfirm'])
+     ->name('dangky.confirm.form');
+
+// 4) Xác nhận OTP và tạo tài khoản (POST)
+Route::post('/dangky/xac-nhan', [HomeController::class, 'confirmRegister'])
+     ->name('dangky.confirm');
+
+
 
 Route::get('/', function () {
-    $products = SanPham::all();
+    $products = SanPham::with('avatarImage')->paginate(8);
     $bomons = BoMon::with('sanPhams')->get();
     return view('layouts.chinh', compact('products', 'bomons'));
 })->name('layouts.chinh');
@@ -42,32 +59,70 @@ Route::post('/product/{product}/danhgia', [ChiTietController::class, 'guidanhgia
     ->name('product.review.store');
 Route::get('product/{id}/mo-ta', [ChiTietController::class, 'moTa'])
     ->name('product.mo_ta');
+    ///////////////////////////////
+Route::post('/yeu-thich/{product}/toggle', [WishlistController::class, 'toggle'])
+     ->name('wishlist.toggle')
+     ->middleware('auth');
+     ///////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-Route::get('/product/autocomplete', [HomeController::class, 'autocomplete'])
-     ->name('product.autocomplete');
-Route::get('/dangky', [HomeController::class, 'showRegisterForm'])->name('dangky.form');
-Route::post('/dangky', [HomeController::class, 'dangky'])->name('dangky');
+Route::middleware('auth')->group(function () {
+    // Hiển thị hồ sơ và form sửa hồ sơ
+    Route::get('/profile',           [CSThongTinController::class, 'profile'])
+         ->name('profile.index');
+    Route::get('/profile/edit',      [CSThongTinController::class, 'editProfile'])
+         ->name('profile.edit');
+
+    // Cập nhật hồ sơ (PATCH)
+    Route::patch('/profile',         [CSThongTinController::class, 'updateProfile'])
+         ->name('profile.update');
+
+    // Đổi email
+    Route::get('/profile/email',     [CSThongTinController::class, 'changeEmail'])
+         ->name('profile.change_email');
+    Route::post('/profile/email',    [CSThongTinController::class, 'updateEmail'])
+         ->name('profile.update_email');
+
+    // Đổi số điện thoại
+    Route::get('/profile/phone',     [CSThongTinController::class, 'changePhone'])
+         ->name('profile.change_phone');
+    Route::post('/profile/phone',    [CSThongTinController::class, 'updatePhone'])
+         ->name('profile.update_phone');
+
+    // === Đơn mua ===
+    // Xem chi tiết
+    Route::get('/orders/{id}',       [CSThongTinController::class, 'orderShow'])
+         ->name('orders.show');
+    // Hủy đơn (PATCH)
+    Route::patch('/orders/{id}/cancel',
+         [CSThongTinController::class, 'orderCancel'])
+         ->name('orders.cancel');
+});
+////////////////////////////////////////////////////////////////////////
+Route::get('/product/autocomplete', [HomeController::class, 'autocomplete'])->name('product.autocomplete');
+
 //////đăng nhập đăng ký quên mật khẩu
 Route::get('/dangnhap', [HomeController::class, 'showLoginForm'])->name('login');
 Route::post('/dangnhap', [HomeController::class, 'login'])->name('login');
 Route::post('/dang-xuat', [HomeController::class, 'logout'])->name('logout');
 // Không cần middleware đặc biệt, hoặc dùng 'guest' nếu chỉ cho user chưa đăng nhập
 Route::middleware('guest')->group(function(){
-    // Bước 1: form nhập email/SĐT
+    // 1️⃣ Nhập email/SĐT
     Route::get('password/forgot', [HomeController::class, 'showForgotForm'])
          ->name('password.request');
+    Route::post('password/forgot', [HomeController::class, 'processForgot'])
+         ->name('password.process');
 
-    // Bước 2: kiểm tra login tồn tại, lưu session và redirect sang bước reset
-    Route::post('password/forgot', [HomeController::class, 'sendForgot'])
-         ->name('password.email');
+    // 2️⃣ Nhập mật khẩu mới và gửi OTP
+    Route::get('password/change', [HomeController::class, 'showChangeForm'])
+         ->name('password.change.form');
+    Route::post('password/change', [HomeController::class, 'sendResetCode'])
+         ->name('password.sendCode');
 
-    // Bước 3: show form reset (sinh random captcha text-only)
-    Route::get('password/reset', [HomeController::class, 'showResetForm'])
-         ->name('password.reset');
-
-    // Bước 4: xử lý đổi mật khẩu
-    Route::post('password/reset', [HomeController::class, 'resetPassword'])
-         ->name('password.update');
+    // 3️⃣ Nhập mã OTP để xác nhận
+    Route::get('password/confirm', [HomeController::class, 'showConfirmForm'])
+         ->name('password.confirm.form');
+    Route::post('password/confirm', [HomeController::class, 'confirmReset'])
+         ->name('password.confirm');
 });
 ////////////////////////////////////////////////////////////////////////
 //chi tiết đơn hàng
@@ -78,8 +133,13 @@ Route::middleware('auth')->group(function(){
     // chi tiết
     Route::get('/donhang/{id}', [CTDonHangController::class, 'show'])
          ->name('donhang.show');
+         // Hủy đơn (PATCH)
+    
 });
 
+Route::patch('donhang/{id}/huy', [CTDonHangController::class, 'cancel'])
+     ->name('donhang.cancel')
+     ->middleware('auth');
 // giỏ hàng
 
 Route::middleware('auth')->group(function(){
@@ -137,9 +197,9 @@ Route::get('layouts/timkiemSP', function () {
 Route::get('/dangnhap', function () {
     return view('layouts.dangnhap');
 });
-Route::get('/dangky', function () {
-    return view('layouts.dangky');
-});
+// Route::get('/dangky', function () {
+//     return view('layouts.dangky');
+// });
 Route::get('/quenmatkhau', function () {
     return view('layouts.quenmatkhau');
 });
@@ -155,6 +215,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product/create', [AdminController::class, 'productCreate'])->name('product.create');
     Route::post('product', [AdminController::class, 'productStore'])->name('product.store');
     Route::delete('product/{id}', [AdminController::class, 'productDestroy'])->name('product.destroy');
+    Route::get('product/import-price', [AdminController::class, 'getImportPrice'])->name('product.import-price');
+    //Quản lý biển thể sản phẩm
+    Route::get('variants/{variant}/edit', [AdminController::class, 'variantEdit'])->name('variant.edit');
+    Route::patch('variants/{variant}', [AdminController::class, 'variantUpdate'])->name('variant.update');
+    Route::delete('variants/{variant}', [AdminController::class, 'variantDestroy'])->name('variant.destroy');
     //Quản lý người dùng
     Route::get('users', [AdminController::class, 'users'])->name('users.index');
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('users.create');
@@ -188,6 +253,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/members/{id}', [AdminController::class, 'membersDestroy'])->name('members.destroy');
     //Quản lý kho
     Route::get('inventory', [AdminController::class, 'inventoryIndex'])->name('inventory.index');
+    Route::get('inventory/last-import-price/{id}', [AdminController::class, 'lastImportPrice'])->name('inventory.lastImportPrice');
     // Feedback
     Route::get('feedback', [AdminController::class, 'feedbackIndex'])->name('feedback.index');
     Route::post('feedback/{id}/reply', [AdminController::class, 'feedbackReply'])->name('feedback.reply');
