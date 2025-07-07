@@ -117,4 +117,46 @@
       </table>
     </div>
   </div>
+  {{-- === mới: biểu đồ line === --}}
+  <div class="mt-8 bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-medium mb-4">
+      Số đơn hàng theo {{ ucfirst($period) }}
+    </h2>
+    <canvas id="ordersLineChart" class="w-full" style="height:200px;"></canvas>
+  </div>
 @endsection
+@push('scripts')
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ctx = document.getElementById('ordersLineChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: @json($chartLabels),
+          datasets: [{
+            label: 'Số đơn',
+            data: @json($orderCounts),
+            fill: false,
+            borderColor: 'rgb(59,130,246)',
+            backgroundColor: 'rgba(59,130,246,0.2)',
+            tension: 0.3,
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    });
+  </script>
+@endpush

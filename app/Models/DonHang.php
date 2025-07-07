@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class DonHang extends Model
 {
+    const UPDATED_AT = 'thoigianthem';
+    const CREATED_AT = null;  
+    public $timestamps = false;
     protected $table = 'donhang';
     protected $fillable = [
         'nguoidung_id','sanpham_id','madon','ngaydat',
@@ -21,6 +24,7 @@ class DonHang extends Model
         'delivery_status',
         'notes',
     ];
+    
 
     public function user()
     {

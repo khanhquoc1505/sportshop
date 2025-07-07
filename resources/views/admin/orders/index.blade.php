@@ -23,7 +23,7 @@
           <th class="px-4 py-2">Ngày Tạo</th>
           <th class="px-4 py-2">Khách hàng</th>
           <th class="px-4 py-2">Thanh toán</th>
-          <th class="px-4 py-2">Trạng thái Đơn</th>
+          <!-- <th class="px-4 py-2">Trạng thái Đơn</th> -->
           <th class="px-4 py-2">Hình thức Giao hàng</th>
           <th class="px-4 py-2">Trạng thái Giao</th>
           <th class="px-4 py-2">Tổng tiền (VNĐ)</th>
@@ -69,7 +69,7 @@
               @endswitch
             </td>
 
-            {{-- Trạng thái Đơn --}}
+<!--             {{-- Trạng thái Đơn --}}
             <td class="px-4 py-2">
               @switch($o->trangthaidonhang)
                 @case('dadathang')
@@ -87,7 +87,7 @@
                 @default
                   <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
               @endswitch
-            </td>
+            </td> -->
 
             {{-- Hình thức Giao hàng --}}
             <td class="px-4 py-2 text-capitalize">

@@ -24,19 +24,19 @@
       {{-- Tên --}}
       <div>
         <p class="text-sm text-gray-600">Tên</p>
-        <p class="text-lg font-medium">{{ $member['name'] }}</p>
+        <p class="text-lg font-medium">{{ optional($member->user)->ten_nguoi_dung ?? '—' }}</p>
       </div>
 
       {{-- Email --}}
       <div>
         <p class="text-sm text-gray-600">Email</p>
-        <p class="text-lg font-medium">{{ $member['email'] }}</p>
+        <p class="text-lg font-medium">{{ optional($member->user)->email ?? '—' }}</p>
       </div>
 
       {{-- SĐT --}}
       <div>
         <p class="text-sm text-gray-600">Số điện thoại</p>
-        <p class="text-lg font-medium">{{ $member['phone'] ?: '—' }}</p>
+        <p class="text-lg font-medium">{{ optional($member->user)->phone ?? optional($member->user)->sdt ?? '—' }}</p>
       </div>
 
       {{-- Ngày gia nhập --}}

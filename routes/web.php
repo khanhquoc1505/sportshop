@@ -89,7 +89,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('orders', [AdminController::class, 'ordersIndex'])->name('orders.index');
     Route::get('orders/{order}', [AdminController::class, 'ordersShow'])->name('orders.show');
     Route::delete('orders/{order}', [AdminController::class, 'ordersDestroy'])->name('orders.destroy');
+    Route::patch('orders/{order}/delivery-status', [AdminController::class, 'updateDeliveryStatus'])->name('orders.updateDeliveryStatus');
     Route::patch('orders/{order}/notes', [AdminController::class, 'ordersUpdateNotes'])->name('orders.updateNotes');
+    Route::patch('orders/{order}/refund',[AdminController::class, 'ordersRefund'])->name('orders.refund');
     //Members
     Route::get('/members', [AdminController::class, 'membersIndex'])->name('members.index');
     Route::get('/members/create', [AdminController::class, 'membersCreate'])->name('members.create');

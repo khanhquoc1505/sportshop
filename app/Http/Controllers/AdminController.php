@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use App\Exports\RevenueExport;
 use Illuminate\Support\Facades\DB;
 use App\Models\SanPham;
+use Illuminate\Http\RedirectResponse;
 use App\Models\DonHangChiTiet;
 use App\Models\NguoiDung;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Loai;
 use App\Models\DonHang;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Log;
 use App\Models\Member;
 use App\Models\Comment;
 use App\Models\NhapKho;
@@ -29,41 +31,106 @@ use App\Models\SanPhamKichCoMauSac;
 
 class AdminController extends Controller
 {
-    public function dashboard()
-    {
-        //
-        // 1) Top 5 sản phẩm theo số lượng
-        //
-        $topQty = DB::table('donhang_chitiets')           // đổi thành tên bảng chi tiết đơn hàng của bạn
-            ->join('donhang', 'donhang_chitiets.donhang_id', '=', 'donhang.id')
-            ->join('sanpham', 'donhang_chitiets.sanpham_id', '=', 'sanpham.id')
-            ->whereIn('donhang.trangthaidonhang', ['dathanhtoan','hoanthanh'])
-            ->select('sanpham.ten as label', DB::raw('SUM(donhang_chitiets.soluong) as value'))
-            ->groupBy('sanpham.id','sanpham.ten')
-            ->orderByDesc('value')
-            ->limit(5)
-            ->get();
+    public function dashboard(Request $request)
+{
+    // 1) Lấy input
+    $start  = $request->input('start_date');
+    $end    = $request->input('end_date');
+    $period = $request->input('period','day'); // 'day'|'month'|'year'
 
-        //
-        // 2) Top 5 sản phẩm theo doanh thu
-        //
-        $topRev = DB::table('donhang_chitiets')
-            ->join('donhang', 'donhang_chitiets.donhang_id', '=', 'donhang.id')
-            ->join('sanpham', 'donhang_chitiets.sanpham_id', '=', 'sanpham.id')
-            ->whereIn('donhang.trangthaidonhang', ['dathanhtoan','hoanthanh'])
-            ->select('sanpham.ten as label', DB::raw('SUM(donhang_chitiets.soluong * donhang_chitiets.dongia) as value'))
-            ->groupBy('sanpham.id','sanpham.ten')
-            ->orderByDesc('value')
-            ->limit(5)
-            ->get();
-
-        // Tách label và data ra mảng riêng
-        $labels      = $topQty->pluck('label');
-        $qtyData     = $topQty->pluck('value');
-        $revenueData = $topRev->pluck('value');
-
-        return view('admin.dashboard', compact('labels','qtyData','revenueData'));
+    // (nếu dùng dd/mm/YYYY) parse về Y-m-d
+    if ($start && preg_match('#\d{2}/\d{2}/\d{4}#',$start)) {
+        $start = Carbon::createFromFormat('d/m/Y',$start)->toDateString();
     }
+    if ($end && preg_match('#\d{2}/\d{2}/\d{4}#',$end)) {
+        $end = Carbon::createFromFormat('d/m/Y',$end)->toDateString();
+    }
+
+    // 2) Top 5 SP theo số lượng (pie chart A)
+    $base = DB::table('donhang_sanpham')
+        ->join('donhang','donhang_sanpham.donhang_id','donhang.id')
+        ->join('sanpham','donhang_sanpham.sanpham_id','sanpham.id')
+        ->whereIn('donhang.trangthaidonhang',['dathanhtoan','hoanthanh'])
+        ->when($start, fn($q)=> $q->whereDate('donhang.ngaydat','>=',$start))
+        ->when($end,   fn($q)=> $q->whereDate('donhang.ngaydat','<=',$end));
+
+    $topQty = (clone $base)
+        ->select('sanpham.ten as label', DB::raw('SUM(soluong) as value'))
+        ->groupBy('sanpham.id','sanpham.ten')
+        ->orderByDesc('value')
+        ->limit(5)->get();
+
+    $labels  = $topQty->pluck('label');
+    $qtyData = $topQty->pluck('value');
+
+    // 3) Top 5 SP theo doanh thu (pie chart B)
+    $topRev = (clone $base)
+        ->select('sanpham.ten as label', DB::raw('SUM(soluong * dongia) as value'))
+        ->groupBy('sanpham.id','sanpham.ten')
+        ->orderByDesc('value')
+        ->limit(5)->get();
+
+    $revenueData = $topRev->pluck('value');
+
+    // 4) Tổng số đơn hoàn thành theo period (new chart)
+    switch ($period) {
+        case 'month':
+            $expr = "DATE_FORMAT(ngaydat,'%Y-%m')";
+            break;
+        case 'year':
+            $expr = "YEAR(ngaydat)";
+            break;
+        default:
+            $expr = "DATE(ngaydat)";
+    }
+
+    $ordersOverTime = DB::table('donhang')
+        ->whereIn('trangthaidonhang',['dathanhtoan','hoanthanh'])
+        ->when($start, fn($q)=> $q->whereDate('ngaydat','>=',$start))
+        ->when($end,   fn($q)=> $q->whereDate('ngaydat','<=',$end))
+        ->selectRaw("$expr as label")
+        ->selectRaw('COUNT(*) as value')
+        ->groupBy('label')
+        ->orderBy('label')
+        ->get();
+
+    $orderLabels = $ordersOverTime->pluck('label');
+    $orderData   = $ordersOverTime->pluck('value');
+
+    // 5) Lượt truy cập (line chart, nếu có)
+    $visitLabels = collect(); $visitData = collect();
+    if (DB::getSchemaBuilder()->hasTable('page_views')) {
+        switch ($period) {
+            case 'month':
+                $vpExpr = "DATE_FORMAT(visited_at,'%Y-%m')";
+                break;
+            case 'year':
+                $vpExpr = "YEAR(visited_at)";
+                break;
+            default:
+                $vpExpr = "DATE(visited_at)";
+        }
+        $pv = DB::table('page_views')
+            ->selectRaw("$vpExpr as label")
+            ->selectRaw('SUM(`count`) as visits')
+            ->when($start, fn($q)=> $q->whereDate('visited_at','>=',$start))
+            ->when($end,   fn($q)=> $q->whereDate('visited_at','<=',$end))
+            ->groupBy('label')
+            ->orderBy('label')
+            ->get();
+
+        $visitLabels = $pv->pluck('label');
+        $visitData   = $pv->pluck('visits');
+    }
+
+    // 6) Trả về view
+    return view('admin.dashboard', compact(
+        'labels','qtyData','revenueData',
+        'orderLabels','orderData',
+        'visitLabels','visitData',
+        'start','end','period'
+    ));
+}
 
     public function product(Request $request)
 {
@@ -640,6 +707,43 @@ public function productCreate()
             ->route('admin.orders.show', $order->id)
             ->with('success', 'Ghi chú đã được cập nhật!');
     }
+    public function updateDeliveryStatus(Request $request, $madon)
+{
+    $request->validate([
+        'delivery_status' => 'required|in:pending,waiting_pickup,shipping,delivered,returned,canceled,incomplete'
+    ]);
+
+    // Tìm theo mã đơn
+    $order = DonHang::where('madon', $madon)->firstOrFail();
+
+    $order->delivery_status = $request->delivery_status;
+    $order->save();
+
+    return redirect()
+        ->route('admin.orders.show', $order->id)
+        ->with('success', 'Đã cập nhật trạng thái giao hàng!');
+}
+public function ordersRefund($madon)
+{
+    $order = DonHang::where('madon', $madon)->firstOrFail();
+
+    // Chỉ cho phép refund nếu chưa delivered và đang ở trạng thái thanh toán phù hợp
+    if ($order->delivery_status === 'delivered') {
+        return back()->withErrors('Không thể hoàn tiền: đơn đã giao hàng.');
+    }
+
+    if (in_array($order->trangthai, ['waiting_refund','shipping'])) {
+        return back()->withErrors('Không thể hoàn tiền trong trạng thái hiện tại.');
+    }
+
+    // Cập nhật trạng thái
+    $order->trangthai = 5;               // Giả sử 5 = Đã hoàn tiền
+    $order->save();
+
+    return redirect()
+        ->route('admin.orders.show', $order->id)
+        ->with('success', 'Hoàn tiền thành công!');
+}
 
 
     public function inventoryIndex(Request $request)
@@ -874,6 +978,8 @@ public function lastImportPrice($productId)
             ->orderBy('label')
             ->get();
 
+             $chartLabels    = $overview->pluck('label');
+    $orderCounts    = $overview->pluck('so_don');
         // 6) Lấy danh sách sản phẩm cho dropdown
         $products = SanPham::orderBy('ten')->get(['id','ten']);
 
@@ -882,7 +988,8 @@ public function lastImportPrice($productId)
             'overview',
             'products',
             'period',
-            'productId'
+            'productId',
+            'chartLabels','orderCounts'
         ));
     }
 
@@ -937,59 +1044,92 @@ public function lastImportPrice($productId)
 
         return redirect()->route('admin.users.index')->with('success', 'Thêm người dùng thành công!');
     }
-    public function usersDestroy($id)
-    {
-        // Xoá người dùng theo ID
-        \App\Models\NguoiDung::destroy($id);
+    public function usersDestroy($id): RedirectResponse
+{
+    try {
+        // 1) Lấy user ra để gọi delete() (kích hoạt event deleting nếu có)
+        $user = NguoiDung::findOrFail($id);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'Xóa người dùng thành công');
+        // 2) Kiểm tra user còn đơn hàng nào chưa giao không
+        $hasUndelivered = $user->donHangs()
+            ->where('delivery_status', '!=', 'delivered')
+            ->exists();
+
+        if ($hasUndelivered) {
+            // Nếu còn đơn hàng chưa giao thì không xóa được
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error','Không thể xóa vì người dùng còn đơn hàng chưa giao.');
+        }
+
+        // 3) Nếu qua hết các ràng buộc, tiến hành xóa
+        $user->delete();
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Xóa người dùng thành công.');
+    } catch (\Throwable $e) {
+        // 4) Bắt mọi lỗi bất ngờ, log lại và trả về flash error
+        Log::error("Xóa user #{$id} lỗi: " . $e->getMessage());
+
+        return redirect()
+            ->route('admin.users.index')
+            ->withErrors('Có lỗi xảy ra khi xóa người dùng, vui lòng thử lại.');
     }
+}
     public function membersIndex(Request $request)
-    {
-        $query = Member::query();
+{
+    $query = Member::with('user');
 
-        // filter trạng thái
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
-        }
-
-        // filter bậc
-        if ($request->filled('tier')) {
-            $query->where('membership_tier', $request->tier);
-        }
-
-        $members = $query
-            ->orderBy('id')
-            ->paginate(10)
-            ->appends($request->only('status', 'tier'));
-
-        return view('admin.members.index', compact('members', 'request'));
+    // filter trạng thái (active/inactive)
+    if ($request->filled('status')) {
+        $query->where('is_active', $request->status === 'active');
     }
+
+    // filter bậc (Silver/Gold/Platinum)
+    if ($request->filled('tier')) {
+        $query->where('membership_tier', $request->tier);
+    }
+
+    $members = $query
+        ->orderBy('id')
+        ->paginate(10)
+        ->appends($request->only('status','tier'));
+
+    return view('admin.members.index', [
+      'members' => $members,
+      'filter'  => $request->only('status','tier'),
+    ]);
+}
 
     // SHOW form tạo
     public function membersCreate()
     {
-        return view('admin.members.create');
+         $users = NguoiDung::where('vai_tro','customer')
+              ->doesntHave('member')->get(['id','ten_nguoi_dung','email']);
+        return view('admin.members.create', compact('users'));
     }
 
     // STORE
     public function membersStore(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:members,email',
-            'phone' => 'nullable|string|max:20',
-            'membership_tier' => 'required|in:Silver,Gold,Platinum',
-            'is_active' => 'sometimes|boolean',
-        ]);
+{
+    $data = $request->validate([
+      'user_id' => [
+        'required',
+        Rule::exists('nguoidung','id')
+            ->where('vai_tro','customer'),
+      ],
+      'membership_tier' => 'required|in:Silver,Gold,Platinum',
+      'is_active'       => 'required|boolean',
+      'created_at'       => 'required|date',
+    ]);
 
-        Member::create($data);
+    Member::create($data);
 
-        return redirect()
-            ->route('admin.members.index')
-            ->with('success', 'Thêm thành viên thành công');
-    }
+    return redirect()
+      ->route('admin.members.index')
+      ->with('success','Thêm thành viên thành công');
+}
 
     // SHOW detail
     public function membersShow($id)
@@ -1007,38 +1147,23 @@ public function lastImportPrice($productId)
 
     // UPDATE
     public function membersUpdate(Request $request, $id)
-    {
-        $member = Member::findOrFail($id);
+{
+    $member = Member::findOrFail($id);
 
-        // 1) Quy định validation và thông điệp tuỳ chỉnh
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                // rule unique, bỏ qua record hiện tại
-                Rule::unique('members', 'email')->ignore($id),
-            ],
-            'phone' => 'nullable|string|max:20',
-            'membership_tier' => 'required|in:Silver,Gold,Platinum',
-            'is_active' => 'sometimes|boolean',
-        ];
+    // 1) Chỉ validate hai trường được phép chỉnh
+    $data = $request->validate([
+        'membership_tier' => ['required', Rule::in(['Silver','Gold','Platinum'])],
+        'is_active'       => ['required', 'boolean'],
+    ]);
 
-        $messages = [
-            'email.unique' => 'Email này đã được đăng ký cho thành viên khác, hãy nhập một email mới.',
-        ];
+    // 2) Cập nhật
+    $member->update($data);
 
-        // 2) Validate với messages tuỳ chỉnh
-        $data = $request->validate($rules, $messages);
-
-        // 3) Cập nhật
-        $member->update($data);
-
-        // 4) Chuyển về index với flash popup
-        return redirect()
-            ->route('admin.members.index')
-            ->with('success', 'Cập nhật thành viên thành công');
-    }
+    // 3) Redirect với flash message
+    return redirect()
+        ->route('admin.members.index')
+        ->with('success', 'Cập nhật thành viên thành công');
+}
 
     // DELETE
     public function membersDestroy($id)

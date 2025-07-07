@@ -49,4 +49,8 @@ public function getDecryptedPasswordAttribute()
       return null;
     }
   }
+  public function member()
+    {
+        return $this->hasOne(Member::class, 'user_id');
+    }
 }
