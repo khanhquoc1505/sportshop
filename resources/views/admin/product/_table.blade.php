@@ -19,7 +19,7 @@
         <td class="text-left">{{ $v->product->ten }}</td>
         <td>
           @if($v->product->images->isNotEmpty())
-            <img src="{{ asset('storage/' . $v->product->images->first()->image_path) }}"
+            <img src="{{ asset('images/' . $v->product->images->first()->image_path) }}"
                  class="h-12 w-12 object-cover mx-auto rounded" />
           @else
             <span class="text-gray-400">Không có ảnh</span>
@@ -35,7 +35,8 @@
             <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">Ẩn</span>
           @endif
         </td>
-        <td>{{ $v->created_at->format('d/m/Y') }}</td>
+        <td>{{ \Carbon\Carbon::parse($v->created_at)->format('d/m/Y') }}</td>
+        
         <td class="px-4 py-2 space-x-2">
           <a href="{{ route('admin.variant.edit', $v->id) }}"
              class="px-3 py-1 bg-yellow-400 text-white rounded">Sửa</a>

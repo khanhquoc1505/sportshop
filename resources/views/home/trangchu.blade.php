@@ -69,17 +69,21 @@
 
 <!-- Search Box -->
 <div class="header-search" style="position: relative;">
-  <form action="{{ route('product.search') }}" method="GET" autocomplete="off">
-    <input
-      id="search-input"
-      type="text"
-      name="q"
-      placeholder="Tìm kiếm sản phẩm..."
-      value="{{ request('q','') }}"
-      data-url="{{ route('product.autocomplete') }}"
-    >
-    <button type="submit">🔍</button>
-  </form>
+  <form action="{{ route('product.search') }}" method="GET" autocomplete="off"
+      class="header-search" style="position: relative; width: 400px;">
+  <input
+    id="search-input"
+    name="q"
+    type="text"
+    placeholder="Tìm kiếm sản phẩm..."
+    value="{{ request('q','') }}"
+    data-url="{{ route('product.autocomplete') }}"
+    style="width:100%; padding:8px;"
+  >
+  <button type="submit" style="position:absolute; right:-60px; top:-1px;">🔍</button>
+
+  <div id="search-suggestions" class="suggestions-box"></div>
+</form>
   <div id="search-suggestions" class="suggestions-box"></div>
 </div>
   <div class="header-right">
@@ -145,13 +149,7 @@
 
     <div class="footer-col">
       <h4 class="col-title">2Q SPORT</h4>
-      <ul class="col-list">
-        <li><a href="#">Về Chúng tôi</a></li>
-        <li><a href="#">Tuyển Dụng</a></li>
-        <li><a href="#">Điều Khoản</a></li>
-        <li><a href="#">Chính Sách Bảo Mật</a></li>
-        <li><a href="#">Flash Sale</a></li>
-      </ul>
+      
     </div>
 
     <div class="footer-col">
@@ -160,10 +158,7 @@
         <img src="{{ asset('images/VNPAY.jpg') }}" alt="VNPAY">
       </div>
 
-      <h4 class="col-title mt-4">ĐƠN VỊ VẬN CHUYỂN</h4>
-      <div class="col-logos">
-        <img src="{{ asset('images/viettel.jpg') }}" alt="Viettel Post">
-      </div>
+      
     </div>
 
     <div class="footer-col">
@@ -188,15 +183,7 @@
   <div class="footer-divider"></div>
 
   {{-- PHẦN 3: Chính sách --}}
-  <div class="footer-policies">
-    <a href="#">Chính sách bảo mật</a>
-    <span class="sep">|</span>
-    <a href="#">Quy chế hoạt động</a>
-    <span class="sep">|</span>
-    <a href="#">Chính sách vận chuyển</a>
-    <span class="sep">|</span>
-    <a href="#">Chính sách trả hàng và hoàn tiền</a>
-  </div>
+  
 
   {{-- PHẦN 4: Logo chứng nhận --}}
   <!-- <div class="footer-certifications">

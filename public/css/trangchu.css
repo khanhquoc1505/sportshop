@@ -38,7 +38,8 @@ body {
   overflow-y: auto;
   z-index: 9999;
   display: none;
-   width: 543px;
+   /* width: 543px; */
+   width: 100%;
 }
 .suggestion-item {
   display: flex;
@@ -46,6 +47,9 @@ body {
   padding: 0.5rem;
   border-bottom: 1px solid #eee;
   cursor: pointer;
+}
+.suggestion-item:hover {
+  background: #f0f0f0;
 }
 .suggestion-item:last-child { border-bottom: none; }
 .suggestion-item img {

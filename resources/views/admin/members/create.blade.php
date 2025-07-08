@@ -18,28 +18,19 @@
   <form action="{{ route('admin.members.store') }}" method="POST" class="bg-white p-6 rounded-lg shadow-md w-full">
     @csrf
 
-    {{-- Tên --}}
+    {{-- Chọn User --}}
     <div class="mb-4">
-    <label class="block text-gray-700 mb-1">Tên<span class="text-red-500">*</span></label>
-    <input type="text" name="name" value="{{ old('name') }}"
-      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-      placeholder="Nhập tên thành viên" required />
-    </div>
-
-    {{-- Email --}}
-    <div class="mb-4">
-    <label class="block text-gray-700 mb-1">Email<span class="text-red-500">*</span></label>
-    <input type="email" name="email" value="{{ old('email') }}"
-      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-      placeholder="Nhập email" required />
-    </div>
-
-    {{-- Số điện thoại --}}
-    <div class="mb-4">
-    <label class="block text-gray-700 mb-1">Số điện thoại</label>
-    <input type="text" name="phone" value="{{ old('phone') }}"
-      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-      placeholder="Nhập số điện thoại" />
+      <label class="block text-gray-700 mb-1">Người dùng<span class="text-red-500">*</span></label>
+      <select name="user_id" required
+        class="w-full px-4 py-2 border rounded">
+        <option value="">-- Chọn người dùng --</option>
+       @foreach($users as $u)
+  <option value="{{ $u->id }}"
+    {{ old('user_id') == $u->id ? 'selected': '' }}>
+    {{ $u->ten_nguoi_dung }}
+  </option>
+@endforeach
+      </select>
     </div>
 
     {{-- Cấp độ thành viên --}}
@@ -69,7 +60,7 @@
     {{-- Ngày gia nhập --}}
     <div class="mb-4">
     <label class="block text-gray-700 mb-1">Ngày gia nhập<span class="text-red-500">*</span></label>
-    <input type="date" name="joined_at" value="{{ old('joined_at') }}"
+    <input type="date" name="created_at" value="{{ old('created_at', now()->toDateString()) }}"
       class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
       required />
     </div>

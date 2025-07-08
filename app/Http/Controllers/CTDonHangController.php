@@ -8,6 +8,7 @@ use App\Models\DonHang;
 use App\Models\DanhGia;
 use Illuminate\Support\Facades\DB; 
 
+
 class CTDonHangController extends Controller
 {
     // danh sách đơn đã hoàn thành
@@ -97,6 +98,7 @@ public function store(Request $request)
             ->update([
                 'trangthai'        => 0,
                 'trangthaidonhang' => 'huy',
+                
             ]);
 
         // 4) Redirect về chi tiết kèm thông báo

@@ -20,7 +20,7 @@
       <div class="dh-card-body">
         <h5 class="dh-card-title">
           {{ $loop->iteration }}. {{ $order->madon }}
-          ngày {{ $order->created_at->format('d/m/Y') }}
+          ngày {{\Carbon\Carbon::parse($order->created_at)->format('d/m/Y')}}
           [ -{{ $subtotal > 0 ? round($discount / $subtotal * 100) : 0 }}% ]
         </h5>
 

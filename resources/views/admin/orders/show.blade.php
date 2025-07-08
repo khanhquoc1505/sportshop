@@ -46,21 +46,29 @@
       </div>
 
       <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {{-- Trạng thái Giao hàng --}}
-        <div>
-          <p class="text-sm text-gray-600">Trạng thái Giao hàng</p>
-          <div class="mt-1">
-            @if($order['delivery_status'] == 'pending')
-              <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Chờ giao</span>
-            @elseif($order['delivery_status'] == 'shipping')
-              <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Đang giao</span>
-            @elseif($order['delivery_status'] == 'delivered')
-              <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đã giao</span>
-            @else
-              <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">Đã trả về</span>
-            @endif
-          </div>
-        </div>
+       {{-- Trạng thái Giao hàng --}}
+  <div>
+    <p class="text-sm text-gray-600">Trạng thái Giao hàng</p>
+    <form method="POST"
+          action="{{ route('admin.orders.updateDeliveryStatus', $order['id']) }}"
+          class="mt-1 flex items-center">
+      @csrf
+      @method('PATCH')
+      <select name="delivery_status" id="delivery_status" class="border rounded px-2 py-1 text-sm">
+        <option value="pending"        @selected($order['delivery_status']=='pending')>Chờ giao hàng</option>
+          <option value="waiting_pickup" @selected($order['delivery_status']=='waiting_pickup')>Chờ lấy hàng</option>
+          <option value="shipping"       @selected($order['delivery_status']=='shipping')>Đang giao hàng</option>
+          <option value="delivered"      @selected($order['delivery_status']=='delivered')>Đã giao hàng</option>
+          <option value="returned"       @selected($order['delivery_status']=='returned')>Trả hàng</option>
+          <option value="canceled"       @selected($order['delivery_status']=='canceled')>Hủy giao hàng</option>
+          <option value="incomplete"     @selected($order['delivery_status']=='incomplete')>Chưa hoàn thành</option>
+      </select>
+      <button type="submit"
+              class="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+        Cập nhật
+      </button>
+    </form>
+  </div>
 
         {{-- Trạng thái Thanh toán --}}
         <div>
@@ -203,5 +211,24 @@
         In đơn hàng
       </button>
     </div>
+    <div>
+       {{-- 7. Nút Hoàn tiền (nếu đủ điều kiện) --}}
+    @if(
+      in_array($order['trangthai'], ['4']) 
+      && $order['delivery_status'] !== 'delivered'
+    )
+      <form method="POST"
+            action="{{ route('admin.orders.refund', ['order' => $order['id'] ]) }}"
+            onsubmit="return confirm('Bạn có chắc muốn hoàn tiền cho đơn này?');">
+        @csrf
+        @method('PATCH')
+        <button type="submit"
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+          Hoàn tiền
+        </button>
+      </form>
+    @endif
+    </div>
   </div>
+  
 @endsection

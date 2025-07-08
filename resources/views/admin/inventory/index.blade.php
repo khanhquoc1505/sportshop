@@ -4,14 +4,6 @@
 @section('content')
   <h1 class="text-2xl font-semibold mb-4">Quản lý kho</h1>
 
-  {{-- 1) Toolbar --}}
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex space-x-2">
-      <button class="px-3 py-1 border rounded hover:bg-gray-100">In tem mẫu</button>
-      <button class="px-3 py-1 border rounded hover:bg-gray-100">Quản lý khác</button>
-    </div>
-  </div>
-
   {{-- 2) Search & Filters --}}
   <form id="filterForm" method="GET" action="{{ route('admin.inventory.index') }}"
         class="flex items-center space-x-2 mb-4">
@@ -42,7 +34,6 @@
     <table class="min-w-full table-auto">
       <thead>
         <tr class="bg-gray-100 text-gray-700 text-center">
-          <th class="px-4 py-2"><input id="checkAll" type="checkbox" /></th>
           <th class="px-4 py-2">Mã SP</th>
           <th class="px-4 py-2">Tên SP</th>
           <th class="px-4 py-2">Loại SP</th>
@@ -56,7 +47,6 @@
       <tbody>
         @foreach($products as $p)
           <tr class="border-b hover:bg-gray-50 text-center">
-            <td class="px-4 py-2"><input class="row-check" type="checkbox" /></td>
             <td class="px-4 py-2">{{ $p->masanpham }}</td>
             <td class="px-4 py-2 text-left">{{ $p->ten }}</td>
             <td class="px-4 py-2">{{ $p->loais->first()->loai ?? '-' }}</td>
@@ -79,13 +69,6 @@
   {{-- 4) Pagination --}}
   <div class="flex items-center justify-between mt-4">
     <div>
-      Hiển thị
-      <select id="perPage" class="px-2 py-1 border rounded">
-        <option {{ $perPage==10 ? 'selected':'' }}>10</option>
-        <option {{ $perPage==20 ? 'selected':'' }}>20</option>
-        <option {{ $perPage==50 ? 'selected':'' }}>50</option>
-      </select>
-      kết quả
     </div>
     <div>{{ $products->links() }}</div>
   </div>

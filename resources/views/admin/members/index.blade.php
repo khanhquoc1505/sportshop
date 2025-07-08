@@ -53,20 +53,26 @@
           <th class="px-4 py-2">Hành động</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="membersTable">
         @forelse($members as $member)
           <tr class="border-b hover:bg-gray-50">
             {{-- ID --}}
             <td class="px-4 py-2 text-center text-sm member-id">{{ $member['id'] }}</td>
 
             {{-- Tên --}}
-            <td class="px-4 py-2 text-left member-name">{{ $member['name'] }}</td>
+            <td class="px-4 py-2 member-name">
+        {{ optional($member->user)->ten_nguoi_dung ?? '—' }}
+      </td>
 
             {{-- Email --}}
-            <td class="px-4 py-2 text-left member-email">{{ $member['email'] }}</td>
+            <td class="px-4 py-2 member-email">
+        {{ optional($member->user)->email ?? '—' }}
+      </td>
 
             {{-- SĐT --}}
-            <td class="px-4 py-2 text-center">{{ $member['phone'] ?? '—' }}</td>
+           <td class="px-4 py-2 text-center">
+       {{ optional($member->user)->phone ?? optional($member->user)->sdt ?? '—' }}
+      </td>
 
             {{-- Bậc --}}
             <td class="px-4 py-2 text-center">

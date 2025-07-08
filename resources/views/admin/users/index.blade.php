@@ -17,6 +17,41 @@
     </script>
   @endpush
 @endif
+{{-- Error Toast from with() --}}
+@if (session('error'))
+  @push('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+          icon: 'error',
+          title: @json(session('error')),
+          showConfirmButton: false,
+          timer: 3000,
+          toast: true,
+          position: 'top-end'
+        });
+      });
+    </script>
+  @endpush
+@endif
+
+{{-- Error Toast from withErrors() --}}
+@if ($errors->any())
+  @push('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+          icon: 'error',
+          title: @json($errors->first()),
+          showConfirmButton: false,
+          timer: 3000,
+          toast: true,
+          position: 'top-end'
+        });
+      });
+    </script>
+  @endpush
+@endif
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý người dùng</h1>
 
   {{-- Tìm kiếm --}}
@@ -85,7 +120,7 @@
     @endforeach
     </tbody>
     </table>
-  </div>
+  </div>  
 @endsection
 
 @push('scripts')
@@ -117,3 +152,4 @@
     })();
   </script>
 @endpush
+

@@ -7,15 +7,51 @@ use App\Models\Bomon;
 use App\Models\SanPham;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TiemKiemController extends Controller
 {
+
     public function __construct()
     {
         // Share dữ liệu cho sidebar filter ở mọi view
         View::share('loais', Loai::where('status', 1)->get());
         View::share('bomons', Bomon::all());
     }
+    public function autocomplete(Request $request)
+{
+    $q = trim($request->get('q',''));
+    if ($q === '') {
+        return response()->json([]);
+    }
+
+    // 1️⃣ Tách query thành các từ (bỏ khoảng trắng thừa)
+    $terms = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
+
+    // 2️⃣ Khởi tạo query sản phẩm
+    $query = SanPham::with('avatarImage')
+        ->where('trang_thai', 1);
+
+    // 3️⃣ Với mỗi từ, bắt buộc tên phải chứa nó
+    foreach ($terms as $term) {
+        $query->where('ten', 'like', "%{$term}%");
+    }
+
+    // 4️⃣ Lấy tối đa 10 kết quả
+    $products = $query->limit(10)->get();
+
+    $items = $products->map(fn($p) => [
+        'ten' => $p->ten,
+        'gia' => number_format($p->gia_ban, 0, '', '.'),
+        'url' => route('product.search', ['q' => $p->ten]),
+        'img' => $p->avatarImage
+                     ? asset('images/'.$p->avatarImage->image_path)
+                     : asset('images/default.png'),
+    ]);
+    return response()->json($items);
+}
+
 
     public function search(Request $request)
     {

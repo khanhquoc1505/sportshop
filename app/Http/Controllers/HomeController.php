@@ -19,6 +19,7 @@ use App\Services\OtpService; // Service chung
 
 class HomeController extends Controller
 {
+    
     //HEADER
     public function index()
     {

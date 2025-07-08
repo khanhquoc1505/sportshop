@@ -35,7 +35,10 @@
   {{-- HEADER --}}
   <header class="flex items-center justify-between bg-primary px-6 py-3 shadow-lg">
     <div class="flex items-center space-x-6">
-      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10" />
+      <a href="/" class="h-10">
+      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10">
+    </a>
+      <!-- <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10" /> -->
       <i class="fa-solid fa-globe text-2xl"></i>
     </div>
     <div class="flex items-center space-x-4">

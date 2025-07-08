@@ -49,10 +49,17 @@ public function getDecryptedPasswordAttribute()
       return null;
     }
   }
+
   public function getAvatarUrlAttribute()
 {
     return $this->avatar
         ? asset($this->avatar)
         : asset('images/avatar-placeholder.png');
 }
+
+  public function member()
+    {
+        return $this->hasOne(Member::class, 'user_id');
+    }
+
 }

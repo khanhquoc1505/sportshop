@@ -10,15 +10,15 @@ class Member extends Model
     protected $table = 'members';
 
     protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'membership_tier',
-        'is_active',
+        'user_id','membership_tier','is_active','created_at',
     ];
 
     protected $casts = [
         'is_active'       => 'boolean',
         'membership_tier' => 'string',
     ];
+    public function user()
+    {
+        return $this->belongsTo(NguoiDung::class,'user_id', 'id');
+    }
 }

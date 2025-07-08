@@ -12,7 +12,7 @@
   </nav>
 
   <h1 class="ct-title">Mã đơn: {{ $order->madon }}</h1>
-  <p class="ct-subtext">Ngày đặt hàng: {{ $order->created_at->format('d/m/Y') }}</p>
+  <p class="ct-subtext">Ngày đặt hàng: {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y')}}</p>
   @php
             // map trạng thái string -> CSS class hoặc label nếu cần
             $labels = [
@@ -34,6 +34,32 @@
           <span class="dh-badge {{ $class }}">
             {{ $labels[$order->trangthaidonhang] ?? ucfirst($order->trangthaidonhang) }}
           </span>
+
+    <!-- ///////////////////////////////////////////////////// -->
+
+    @unless($order->trangthaidonhang === 'huy')
+  @php
+    $deliveryLabels = [
+      'pending'        => 'Chờ giao hàng',
+      'waiting_pickup' => 'Chờ lấy hàng',
+      'shipping'       => 'Đang giao hàng',
+      'delivered'      => 'Đã giao hàng',
+      'returned'       => 'Trả hàng',
+      'canceled'       => 'Hủy giao hàng',
+      'incomplete'     => 'Chưa hoàn thành',
+    ];
+    $dl = $order->delivery_status;
+    $dlText = $deliveryLabels[$dl] ?? ucfirst($dl);
+  @endphp
+
+  <div class="mt-4">
+    <span class="text-sm text-gray-600">Trạng thái Giao hàng:</span>
+    <span class="dh-badge dh-bg-info ml-2">{{ $dlText }}</span>
+  </div>
+@endunless
+
+     <!-- ///////////////////////////////////////////////////// -->
+
 
   <h2 class="ct-section-title">Chi tiết đơn hàng</h2>
   <div class="ct-order-details">
