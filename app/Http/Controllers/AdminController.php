@@ -8,6 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Exports\RevenueExport;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage; 
 use App\Models\SanPham;
@@ -323,7 +324,8 @@ public function productCreate()
             
       'kichCoList' => KichCo::all(),
       'mausacList' => MauSac::all(),
-      'dsLoai'     => Loai::pluck('loai'),
+      /* 'dsLoai'     => Loai::pluck('loai'), */
+      'dsLoai'        => Loai::all(),
       'existingNames'=> SanPham::pluck('ten'),
     ]);
     }
@@ -349,73 +351,87 @@ public function productCreate()
     ]);
 }
      public function productStore(Request $request)
-    {
+     {
         $data = $request->validate([
-            'ten'          => 'required|string|max:255',
-            'category'     => 'required|string|max:100',
-            'price'        => 'required|numeric|min:0',
-            'gia_buon'     => 'nullable|numeric|min:0',
-            'gia_nhap'     => 'required|numeric|min:0',
-            'import_date'  => 'required|date',
-            'qty'          => 'required|integer|min:1',
-            'size'         => 'required|string|max:10',
-            'color'        => 'required|string|max:50',
-            'trang_thai'   => 'required|in:0,1',
-            'images.*'     => 'nullable|image|max:2048',
+            'ten'         => 'required|string|max:255',
+            'loai_id'     => 'required|exists:loai,id',
+            'price'       => 'required|numeric|min:0',
+            'gia_buon'    => 'nullable|numeric|min:0',
+            'gia_nhap'    => 'required|numeric|min:0',
+            'import_date' => 'required|date',
+            'qty'         => 'required|integer|min:1',
+            'size'        => 'required|string|max:10',
+            'color'       => 'required|string|max:50',
+            'trang_thai'  => 'required|in:0,1',
+            'images.*'    => 'nullable|image|max:2048',
         ]);
 
-        // Prefixed mã sản phẩm
+        // 0) Prefix mã SP theo tên Loại
+        $loai = Loai::find($data['loai_id']);
         $prefixMap = [
-            'Bóng đá'       => 'BD',
-            'Bóng rổ'        => 'BR',
-            'Cầu lông'       => 'CL',
-            'Váy cầu lông'   => 'VCL',
-            'Áo'             => 'AO',
-            'Quần'           => 'QU',
-            'Phụ kiện'       => 'PK',
+            'Bóng đá'     => 'BD',
+            'Bóng rổ'      => 'BR',
+            'Cầu lông'     => 'CL',
+            'Váy cầu lông' => 'VCL',
+            'Áo'           => 'AO',
+            'Quần'         => 'QU',
+            'Phụ kiện'     => 'PK',
         ];
-        $pre = $prefixMap[$data['category']] ?? 'SP';
+        $pre = $prefixMap[$loai->loai] ?? 'SP';
 
-        // 1) Lấy hoặc tạo mới Sản phẩm
+        // 1) Lấy hoặc tạo mới sản phẩm
         $product = SanPham::firstOrNew(['ten' => $data['ten']]);
-        if (!$product->exists) {
+
+        // mỗi lần (tạo hoặc đổi tên) đều phải sinh lại slug
+        $slug = Str::slug($data['ten']);
+
+        if (! $product->exists) {
+            // sinh mã mới
             $last = SanPham::where('masanpham','like',$pre.'%')
-                           ->orderByDesc('id')->first();
-            $num  = $last
-                  ? intval(preg_replace('/\D/','',$last->masanpham)) + 1
-                  : 1;
-            $product->masanpham     = $pre . str_pad($num, 5, '0', STR_PAD_LEFT);
-            $product->loai           = $data['category'];
+                ->orderByDesc('id')->first();
+
+            $num = $last
+                ? intval(preg_replace('/\D/','',$last->masanpham)) + 1
+                : 1;
+
+            $product->masanpham     = $pre . str_pad($num,5,'0',STR_PAD_LEFT);
+            $product->slug           = $slug;
             $product->gia_ban        = $data['price'];
             $product->gia_buon       = $data['gia_buon'] ?? 0;
             $product->thoi_gian_them = now();
             $product->trang_thai     = 1;
             $product->save();
         } else {
-            // cập nhật giá nếu SP đã tồn tại
+            // chỉ cập nhật giá nếu đã tồn tại
             $product->update([
+                'ten'      => $data['ten'],
+                'slug'     => $slug,
                 'gia_ban'  => $data['price'],
                 'gia_buon' => $data['gia_buon'] ?? $product->gia_buon,
-                'loai'     => $data['category'],
             ]);
         }
 
-        // 2) Tạo hoặc lấy Size & Color
+        // 2) Sync pivot loại
+        $product->loais()->sync([$data['loai_id']]);
+
+        // 3) Tìm hoặc tạo size & color
         $kc = KichCo::firstOrCreate(['size' => $data['size']]);
         $ms = MauSac::firstOrCreate(['mausac' => $data['color']]);
 
-        // 3) Xử lý ảnh variant: xóa ảnh cũ rồi lưu mới
+        // 4) Xử lý ảnh variant (nếu có):
         if ($request->hasFile('images')) {
+            // a) xóa hết ảnh cũ của variant này
             $product->colorImages()
-                    ->where('mausac_id', $ms->id)
-                    ->where('kichco_id', $kc->id)
-                    ->each(function($img){
-                        Storage::disk('public')->delete($img->image_path);
-                        $img->delete();
-                    });
+                ->where('mausac_id', $ms->id)
+                ->where('kichco_id', $kc->id)
+                ->each(function($img){
+                    Storage::disk('public')->delete($img->image_path);
+                    $img->delete();
+                });
 
-            foreach ($request->file('images') as $img) {
-                $path = $img->store('variants','public');
+            // b) lưu mới
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('variants','public');
                 $product->colorImages()->create([
                     'mausac_id'  => $ms->id,
                     'kichco_id'  => $kc->id,
@@ -425,7 +441,7 @@ public function productCreate()
             }
         }
 
-        // 4) Tạo hoặc cập nhật bản ghi variant
+        // 5) Tạo hoặc cập nhật variant
         SanPhamKichCoMauSac::updateOrCreate(
             [
                 'sanpham_id' => $product->id,
@@ -433,12 +449,12 @@ public function productCreate()
                 'mausac_id'  => $ms->id,
             ],
             [
-                'sl'         => DB::raw("IFNULL(sl,0) + {$data['qty']}"),
+                'sl'         => DB::raw("IFNULL(sl,0)+{$data['qty']}"),
                 'trang_thai' => $data['trang_thai'],
             ]
         );
 
-        // 5) Ghi nhận nhập kho
+        // 6) Ghi nhận nhập kho
         $userId = auth()->id() ?: NguoiDung::first()->id;
         $product->nhapKho()->create([
             'nguoidung_id' => $userId,
