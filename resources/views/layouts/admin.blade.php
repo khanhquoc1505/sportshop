@@ -36,8 +36,8 @@
   <header class="flex items-center justify-between bg-primary px-6 py-3 shadow-lg">
     <div class="flex items-center space-x-6">
       <a href="/" class="h-10">
-      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10">
-    </a>
+        <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10">
+      </a>
       <!-- <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-10" /> -->
       <i class="fa-solid fa-globe text-2xl"></i>
     </div>
@@ -140,9 +140,9 @@
           <li>
             <a href="{{ route('admin.vouchers.index') }}" @class([
           'flex items-center px-4 py-2 hover:bg-gray-700',
-          'bg-gray-700 border-l-4 border-primary font-medium' => request()->routeIs('admin.voucher.*')
+          'bg-gray-700 border-l-4 border-primary font-medium' => request()->routeIs('admin.vouchers.*')
       ])>
-              <i class="fa fa-ticket-alt mr-3 w-5"></i>
+    <i class="fa fa-ticket-alt mr-3 w-5"></i>
               Voucher
             </a>
           </li>

@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Exports\RevenueExport;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage; 
 use App\Models\SanPham;
 use Illuminate\Http\RedirectResponse;
 use App\Models\DonHangChiTiet;
@@ -134,7 +135,7 @@ class AdminController extends Controller
 
     public function product(Request $request)
 {
-    $query = SanPhamKichCoMauSac::with(['product.images', 'kichCo', 'mauSac'])
+    $query = SanPhamKichCoMauSac::with(['product.colorImages', 'kichCo', 'mauSac'])
      ->orderBy('sanpham_id')
      ->orderBy('id');
 
@@ -171,23 +172,56 @@ $variants = $query->paginate(10);
     }
     public function productUpdate(Request $request, $id)
     {
+        // 1) Validate chung
+        $data = $request->validate([
+            'ten'        => 'required|string|max:255',
+            'price'      => 'required|numeric|min:0',
+            'gia_buon'   => 'nullable|numeric|min:0',
+            'size'       => 'required|string|max:10',
+            'color'      => 'required|string|max:50',
+            'trang_thai' => 'required|in:0,1',
+            'images.*'   => 'nullable|image|max:2048',
+        ]);
+
+        // 2) Lấy SP và cập nhật thông tin cơ bản
         $product = SanPham::findOrFail($id);
-
-        $product->ten = $request->ten;
-        $product->mo_ta = $request->mo_ta;
-        $product->gia_ban = $request->gia_ban;
-        $product->thoi_gian_them = $request->thoi_gian_them;
-        $product->trang_thai = $request->trang_thai;
-
-        if ($request->hasFile('hinh_anh')) {
-            $filename = time() . '.' . $request->hinh_anh->extension();
-            $request->hinh_anh->move(public_path('images'), $filename);
-            $product->hinh_anh = $filename;
-        }
-
+        $product->ten           = $data['ten'];
+        $product->gia_ban       = $data['price'];
+        $product->gia_buon      = $data['gia_buon'] ?? $product->gia_buon;
+        $product->trang_thai    = $data['trang_thai'];
         $product->save();
 
-        return redirect()->route('admin.product.index')->with('success', 'Cập nhật sản phẩm thành công!');
+        // 3) Tìm variant tương ứng
+        $kc = KichCo::firstOrCreate(['size' => $data['size']]);
+        $ms = MauSac::firstOrCreate(['mausac' => $data['color']]);
+        $variant = SanPhamKichCoMauSac::firstOrFail([
+            'sanpham_id' => $product->id,
+            'kichco_id'  => $kc->id,
+            'mausac_id'  => $ms->id,
+        ]);
+
+        // 4) Nếu có upload images mới: xóa cũ + lưu
+        if ($request->hasFile('images')) {
+            $product->colorImages()
+                    ->where('mausac_id', $ms->id)
+                    ->delete();
+
+            foreach ($request->file('images') as $img) {
+                $path = $img->store('variants', 'public');
+                $product->colorImages()->create([
+                    'mausac_id'  => $ms->id,
+                    'image_path' => $path,
+                    'is_main'    => 1,
+                ]);
+            }
+        }
+
+        // 5) Cập nhật số lượng nếu muốn (hoặc giữ nguyên)
+        // $variant->sl = ...; $variant->save();
+
+        return redirect()
+            ->route('admin.product.index')
+            ->with('success','Cập nhật biến thể sản phẩm thành công');
     }
     // Hiển thị form chỉ sửa biến thể
 public function variantEdit($id)
@@ -210,63 +244,71 @@ public function variantEdit($id)
         return view('admin.product.variant-edit', compact('v','categories','giaNhapCu'));
     }
 
-    public function variantUpdate(Request $request, $id)
+     public function variantUpdate(Request $request, $id)
     {
         $data = $request->validate([
-            // variant fields
-            'sl'        => 'required|integer|min:0',
-            'kichco_id' => 'required|exists:kichco,id',
-            'mausac_id' => 'required|exists:mausac,id',
-            'hinh_anh'  => 'nullable|image|max:2048',
-            'trang_thai'=> 'required|in:0,1',
-            // product‐level fields
-            'gia_nhap'  => 'nullable|numeric|min:0',
-            'gia_ban'   => 'nullable|numeric|min:0',
-            'gia_buon'  => 'nullable|numeric|min:0',
-            'bo_mon'    => 'nullable|string|max:100',
-            'loai_id'   => 'required|exists:loai,id',   // <-- mới
+            'sl'         => 'required|integer|min:0',
+            'kichco_id'  => 'required|exists:kichco,id',
+            'mausac_id'  => 'required|exists:mausac,id',
+            'trang_thai' => 'required|in:0,1',
+            'gia_nhap'   => 'nullable|numeric|min:0',
+            'gia_ban'    => 'nullable|numeric|min:0',
+            'gia_buon'   => 'nullable|numeric|min:0',
+            'bo_mon'     => 'nullable|string|max:100',
+            'loai_id'    => 'required|exists:loai,id',
+            'images.*'   => 'nullable|image|max:2048',
+        ],[
+            'images.*.image' => 'Mỗi file phải là ảnh hợp lệ.',
+            'images.*.max'   => 'Ảnh không được vượt quá 2MB mỗi file.',
         ]);
 
+        // 1) Lấy variant & sản phẩm
         $variant = SanPhamKichCoMauSac::with('product')->findOrFail($id);
-        $prod    = $variant->product;
-        $prod->loais()->sync([$data['loai_id']]);
+        $product = $variant->product;
 
-        // 1) Cập nhật bảng sanpham (tất cả variants dùng chung giá này)
-        $prod = $variant->product;
-        $prod->update([
-'gia_nhap' => $data['gia_nhap']  ?? $prod->gia_nhap,
-            'gia_ban'  => $data['gia_ban']   ?? $prod->gia_ban,
-            'gia_buon' => $data['gia_buon']  ?? $prod->gia_buon,
-            'bo_mon'   => $data['bo_mon']    ?? $prod->bo_mon,
+        // 2) Sync danh mục (loai)
+        $product->loais()->sync([$data['loai_id']]);
+
+        // 3) Cập nhật giá & bộ môn trên bảng sản phẩm
+        $product->update([
+            'gia_nhap' => $data['gia_nhap'] ?? $product->gia_nhap,
+            'gia_ban'  => $data['gia_ban']  ?? $product->gia_ban,
+            'gia_buon' => $data['gia_buon'] ?? $product->gia_buon,
+            'bo_mon'   => $data['bo_mon']   ?? $product->bo_mon,
         ]);
 
-        // 2) Cập nhật chính biến thể
+        // 4) Cập nhật số lượng, kích cỡ, màu sắc, trạng thái của variant
         $variant->update([
-            'sl'        => $data['sl'],
-            'kichco_id' => $data['kichco_id'],
-            'mausac_id' => $data['mausac_id'],
-            'trang_thai'=> $data['trang_thai'],
+            'sl'         => $data['sl'],
+            'kichco_id'  => $data['kichco_id'],
+            'mausac_id'  => $data['mausac_id'],
+            'trang_thai' => $data['trang_thai'],
         ]);
 
-        // 3) Nếu đổi ảnh variant
-        if ($request->hasFile('hinh_anh')) {
-            $path = $request->file('hinh_anh')->store('variants','public');
-            $variant->hinh_anh = $path;
-            $variant->save();
+        // 5) Nếu upload ảnh mới, xóa ảnh cũ của biến thể đó rồi lưu ảnh mới
+        if ($request->hasFile('images')) {
+            $product->colorImages()
+                    ->where('mausac_id', $variant->mausac_id)
+                    ->where('kichco_id', $variant->kichco_id)
+                    ->each(function($img){
+                        Storage::disk('public')->delete($img->image_path);
+                        $img->delete();
+                    });
+
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('variants','public');
+                $product->colorImages()->create([
+                    'mausac_id'  => $variant->mausac_id,
+                    'kichco_id'  => $variant->kichco_id,
+                    'image_path' => $path,
+                    'is_main'    => 1,
+                ]);
+            }
         }
-        $userId = auth()->id() ?: NguoiDung::first()->id;
-        if ($request->filled('gia_nhap')) {
-        $variant->product->nhapKho()->create([
-            'nguoidung_id'  => $userId, //auth()->id(),
-            'soluongnhap'   => 0,             // hoặc lấy từ 1 ô qty nếu bạn muốn
-            'gianhap'       => $request->gia_nhap,
-            'ngaynhap'      => now(),
-        ]);
-    }
 
         return redirect()
             ->route('admin.product.index')
-            ->with('success','Cập nhật biến thể thành công');
+            ->with('success','Cập nhật biến thể thành công!');
     }
 
 // (Nếu cần) xóa biến thể
@@ -306,45 +348,43 @@ public function productCreate()
         'wholesalePrice' => $product->gia_buon,
     ]);
 }
-    public function productStore(Request $request)
-{
-   $data = $request->validate([
-            // product‐level
-            'ten'         => 'required|string|max:255',
-            'category'    => 'required|string|max:100',
-            'price'       => 'required|numeric|min:0',
-            'gia_buon'    => 'nullable|numeric|min:0',
-            // nhập kho + variant
-            'gia_nhap'    => 'required|numeric|min:0',
-
-            'import_date' => 'required|date',
-            'qty'         => 'required|integer|min:1',
-            // variant
-            'size'        => 'required|string|max:10',
-            'color'       => 'required|string|max:50',
-            'trang_thai'  => 'required|in:0,1',
-            'images.*'    => 'nullable|image|max:2048',
+     public function productStore(Request $request)
+    {
+        $data = $request->validate([
+            'ten'          => 'required|string|max:255',
+            'category'     => 'required|string|max:100',
+            'price'        => 'required|numeric|min:0',
+            'gia_buon'     => 'nullable|numeric|min:0',
+            'gia_nhap'     => 'required|numeric|min:0',
+            'import_date'  => 'required|date',
+            'qty'          => 'required|integer|min:1',
+            'size'         => 'required|string|max:10',
+            'color'        => 'required|string|max:50',
+            'trang_thai'   => 'required|in:0,1',
+            'images.*'     => 'nullable|image|max:2048',
         ]);
 
-        // 0) Map category -> prefix
+        // Prefixed mã sản phẩm
         $prefixMap = [
-            'Bóng đá'=>'BD', 'Bóng rổ'=>'BR', 'Cầu lông'=>'CL',
-            'Váy cầu lông'=>'VCL', 'Áo'=>'AO', 'Quần'=>'QU', 'Phụ kiện'=>'PK'
+            'Bóng đá'       => 'BD',
+            'Bóng rổ'        => 'BR',
+            'Cầu lông'       => 'CL',
+            'Váy cầu lông'   => 'VCL',
+            'Áo'             => 'AO',
+            'Quần'           => 'QU',
+            'Phụ kiện'       => 'PK',
         ];
         $pre = $prefixMap[$data['category']] ?? 'SP';
 
-        // 1) Lấy hoặc tạo mới sản phẩm theo tên
+        // 1) Lấy hoặc tạo mới Sản phẩm
         $product = SanPham::firstOrNew(['ten' => $data['ten']]);
-
         if (!$product->exists) {
-            // a) sinh mã mới
             $last = SanPham::where('masanpham','like',$pre.'%')
                            ->orderByDesc('id')->first();
             $num  = $last
                   ? intval(preg_replace('/\D/','',$last->masanpham)) + 1
                   : 1;
             $product->masanpham     = $pre . str_pad($num, 5, '0', STR_PAD_LEFT);
-            // b) gán các field
             $product->loai           = $data['category'];
             $product->gia_ban        = $data['price'];
             $product->gia_buon       = $data['gia_buon'] ?? 0;
@@ -352,7 +392,7 @@ public function productCreate()
             $product->trang_thai     = 1;
             $product->save();
         } else {
-            // Nếu muốn cập nhật lại giá bán / giá buôn khi thêm variant
+            // cập nhật giá nếu SP đã tồn tại
             $product->update([
                 'gia_ban'  => $data['price'],
                 'gia_buon' => $data['gia_buon'] ?? $product->gia_buon,
@@ -360,26 +400,32 @@ public function productCreate()
             ]);
         }
 
-        // 2) Lưu ảnh nếu có
+        // 2) Tạo hoặc lấy Size & Color
+        $kc = KichCo::firstOrCreate(['size' => $data['size']]);
+        $ms = MauSac::firstOrCreate(['mausac' => $data['color']]);
+
+        // 3) Xử lý ảnh variant: xóa ảnh cũ rồi lưu mới
         if ($request->hasFile('images')) {
+            $product->colorImages()
+                    ->where('mausac_id', $ms->id)
+                    ->where('kichco_id', $kc->id)
+                    ->each(function($img){
+                        Storage::disk('public')->delete($img->image_path);
+                        $img->delete();
+                    });
+
             foreach ($request->file('images') as $img) {
-                $path = $img->store('public/images');
-                $product->images()->create([
-                    'image_path' => str_replace('public/','storage/',$path),
+                $path = $img->store('variants','public');
+                $product->colorImages()->create([
+                    'mausac_id'  => $ms->id,
+                    'kichco_id'  => $kc->id,
+                    'image_path' => $path,
+                    'is_main'    => 1,
                 ]);
             }
         }
 
-        // 3) FindOrCreate size & color
-        $kc = KichCo::firstOrCreate(
-            ['size' => $data['size']],
-            ['loai_size' => null] // hoặc giá trị mặc định
-        );
-        $ms = MauSac::firstOrCreate(
-            ['mausac' => $data['color']]
-        );
-
-        // 4) Tạo hoặc cập nhật variant (cộng dồn số lượng nếu trùng)
+        // 4) Tạo hoặc cập nhật bản ghi variant
         SanPhamKichCoMauSac::updateOrCreate(
             [
                 'sanpham_id' => $product->id,
@@ -394,17 +440,17 @@ public function productCreate()
 
         // 5) Ghi nhận nhập kho
         $userId = auth()->id() ?: NguoiDung::first()->id;
-$product->nhapKho()->create([
-            'nguoidung_id'  => $userId,
-            'soluongnhap'   => $data['qty'],
-            'gianhap'       => $data['gia_nhap'],
-            'ngaynhap'      => $data['import_date'],
+        $product->nhapKho()->create([
+            'nguoidung_id' => $userId,
+            'soluongnhap'  => $data['qty'],
+            'gianhap'      => $data['gia_nhap'],
+            'ngaynhap'     => $data['import_date'],
         ]);
 
         return redirect()
             ->route('admin.product.index')
             ->with('success','Thêm sản phẩm/variant/nhập kho thành công');
-}
+    }
     public function productDestroy($id)
     {
         $product = SanPham::with('images')->findOrFail($id);
@@ -751,11 +797,10 @@ public function ordersRefund($madon)
     $query = SanPham::withSum(['activeVariants as tong_ton'], 'sl')
                      ->orderBy('ten');
 
-    if ($request->filled('search')) {
-        $q = $request->search;
-        $query->where(function ($sub) use ($q) {
-            $sub->where('ten', 'like', "%{$q}%")
-                ->orWhere('masanpham', 'like', "%{$q}%");
+    if ($search = $request->get('search')) {
+        $query->where(function($q) use($search) {
+            $q->where('masanpham','like',"%{$search}%")
+              ->orWhere('ten','like',"%{$search}%");
         });
     }
 

@@ -47,8 +47,9 @@ class Kernel extends HttpKernel
      * Các middleware có thể gán trên từng route nếu cần.
      */
     protected $routeMiddleware = [
-        'auth'       => \App\Http\Middleware\Authenticate::class,
+        'auth'       => \Illuminate\Auth\Middleware\Authenticate::class,
         'track.views'=> \App\Http\Middleware\TrackPageViews::class,
+        'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         // … các middleware khác của bạn …
     ];
 }
