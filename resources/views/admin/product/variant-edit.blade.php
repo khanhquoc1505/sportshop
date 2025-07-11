@@ -89,13 +89,22 @@
     </div>
 
     {{-- Ảnh biến thể --}}
-    <div>
-      <label class="block mb-1 font-medium">Hình ảnh (nếu đổi)</label>
-      <input type="file" name="hinh_anh" class="block w-full" />
-      @if($v->hinh_anh)
-      <img src="{{ asset('storage/' . $v->hinh_anh) }}" class="h-24 mt-2 object-contain rounded border">
-    @endif
-    </div>
+    <div class="mb-4">
+    <label for="images" class="block text-gray-700 mb-1">
+      Hình ảnh (nếu đổi, có thể chọn nhiều)
+    </label>
+    <input
+      type="file"
+      name="images[]"
+      id="images"
+      multiple
+      accept="image/*"
+      class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+    />
+    @error('images.*')
+      <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+  </div>
 
     {{-- Trạng thái --}}
     <div>

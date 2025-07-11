@@ -94,7 +94,7 @@
       {{ ucfirst($u['vai_tro']) }}
       </span>
       </td>
-      <td class="px-4 py-2">{{ $u->decrypted_password ?? '—' }}</td>
+      <td class="px-4 py-2">{{ $u->mat_khau ?? '—' }}</td>
       <td class="px-4 py-2 text-sm">
       {{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y H:i') }}
       </td>

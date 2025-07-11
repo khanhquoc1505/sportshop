@@ -98,7 +98,7 @@
     @auth
         <ul class="user-dropdown-list">
             @if(Auth::user()->vai_tro === 'admin')
-                <li><a href="{{ url('/admin/dashboard') }}">Quản trị</a></li>
+                <li><a href="{{ route('admin.dashboard') }}">Quản trị</a></li>
             @else
                 <li><a href="{{ route('profile.index') }}">Hồ sơ</a></li>
                 <li><a href="{{ route('donhang.index') }}">Đơn hàng của tôi</a></li>

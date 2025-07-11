@@ -17,6 +17,7 @@ class ColorImage extends Model
         'mausac_id',
         'image_path',
         'is_main',
+        'kichco_id',
     ];
 
     // === Quan hệ đến sản phẩm ===
@@ -33,5 +34,9 @@ class ColorImage extends Model
     public function getHinhAnhAttribute()
     {
         return $this->image_path;
+    }
+    public function kichCo()
+    {
+      return $this->belongsTo(KichCo::class, 'kichco_id');
     }
 }

@@ -207,7 +207,7 @@ Route::get('/quenmatkhau', function () {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     // Dashboard
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     // Quản lý sản phẩm

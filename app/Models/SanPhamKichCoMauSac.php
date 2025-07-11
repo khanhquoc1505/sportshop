@@ -4,6 +4,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class SanPhamKichCoMauSac extends Model
 {
@@ -23,5 +24,18 @@ class SanPhamKichCoMauSac extends Model
     public function mauSac()
     {
         return $this->belongsTo(MauSac::class, 'mausac_id', 'id');
+    }
+    protected static function booted()
+    {
+        static::deleting(function ($variant) {
+            $variant->product
+                ->colorImages()
+                ->where('mausac_id', $variant->mausac_id)
+                ->where('kichco_id', $variant->kichco_id)
+                ->each(function($img) {
+                    Storage::disk('public')->delete($img->image_path);
+                    $img->delete();
+                });
+        });
     }
 }
