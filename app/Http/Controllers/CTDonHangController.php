@@ -27,16 +27,22 @@ class CTDonHangController extends Controller
     return view('layouts.donhang', compact('orders'));
 }
 
-public function show($id)
+public function show($id,$madon)
 {
     $user = Auth::user();
     if (! $user) return redirect()->route('login');
-
+    
     $order = DonHang::with('chiTiet.sanPham')
         ->where('id', $id)
         ->where('nguoidung_id', $user->id)
         ->whereIn('trangthai', [0, 2, 3])
         ->firstOrFail();
+    if ($order->madon !== $madon) {
+        return redirect()->route('donhang.show', [
+            'id'    => $id,
+            'madon' => $order->madon,
+        ]);
+    }
 
     // vì file nằm layouts/chitietdonhang.blade.php
     return view('layouts.chitietdonhang', compact('order'));

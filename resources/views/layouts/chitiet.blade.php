@@ -11,7 +11,7 @@
       class="thumbnail" 
       src="{{ $img['url'] }}" 
       data-color-id="{{ $img['mausac_id'] }}" 
-      alt="thumb"
+      alt="{{ pathinfo($img['image_path'], PATHINFO_FILENAME) }}"
     >
   @endforeach
 </div>
@@ -20,7 +20,7 @@
   <img 
     id="main-image" 
     src="{{ $colorVariants[0]['image_url'] }}" 
-    alt="Main image"
+    alt="{{ $product->slug}}"
   >
 </div>
     </div>
@@ -139,7 +139,7 @@
       @if(!empty($dg->hinh_anh) && is_array($dg->hinh_anh))
         <div class="ct-review-images">
           @foreach($dg->hinh_anh as $img)
-            <img src="{{ asset('storage/'.$img) }}"
+            <img src="{{ asset('images/'.$img) }}"
                  alt="Review image"
                  class="ct-review-image">
           @endforeach
@@ -173,7 +173,7 @@
       <a href="{{ route('product.show', $item->id) }}">
         <img 
           src="{{ asset('images/' . $avatar) }}" 
-          alt="{{ $item->ten }}"
+          alt="{{ $item->slug }}"
         >
         <div class="ct-related-info">
           <p>{{ $item->ten }}</p>

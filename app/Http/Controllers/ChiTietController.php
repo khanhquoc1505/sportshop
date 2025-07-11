@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ChiTietController extends Controller
 {
-    public function show($id)
+    public function show($id,$slug = null)
 {
     $product = SanPham::with([
         'variants.kichCo',
@@ -19,6 +19,13 @@ class ChiTietController extends Controller
         'colorImages',   // chứa cả hinh_anh
         'boMons'       // belongsToMany BoMon → để lấy sản phẩm cùng môn
     ])->findOrFail($id);
+    $correctSlug = $product->slug;
+    if ($slug !== $correctSlug) {
+        return redirect()->route('product.show', [
+            'id'   => $id,
+            'slug' => $correctSlug
+        ]);
+    }
     $totalStock = $product->variants->sum('sl');
     $inStock = $totalStock > 0;
     // 1) Thumbnails

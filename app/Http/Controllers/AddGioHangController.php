@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AddGioHangController extends Controller
 {
-    /* ╔═════════════════════ A. GIỎ HÀNG CƠ BẢN ═════════════════════╗ */
+  
 
     /** Thêm vào giỏ */
     public function themgiohang(Request $request, SanPham $product)
@@ -98,17 +98,16 @@ class AddGioHangController extends Controller
 {
     // Xóa item
     DonHangSanPham::findOrFail($id)->delete();
-
     // Nếu đây là luồng mua-ngay, gọi nội bộ buynow() để render lại view
     if ($request->filled('product_id')) {
         return $this->buynow($request);
     }
 
     // Ngược lại (luồng giỏ), gọi lại checkout()
-    return $this->checkout($request);
+    return redirect()->route('cart.index');
 }
 
-    /* ╔═════════════════════ B. CHECKOUT (chỉ giỏ) ══════════════════╗ */
+    /*  CHECKOUT (chỉ giỏ)*/
     public function checkout(Request $request)
     {
         $user = auth()->user() ?? abort(401);
@@ -130,11 +129,15 @@ class AddGioHangController extends Controller
         ]);
     }
 
-    /* ╔═════════════════════ C. LUỒNG “MUA NGAY” ═══════════════════╗ */
+    /* LUỒNG “MUA NGAY”*/
     public function buynow(Request $request)
     {
-        $user = auth()->user() ?? abort(401);
+        //$user = auth()->user() ?? abort(401);
+        $user = auth()->user();
         /* --- 1. Nếu submit chỉ để ++/--/xóa item giỏ thì xử luôn rồi hiển thị lại --- */
+        if (! $request->filled('product_id') && ! $request->filled('donhangsp_id')) {
+        return redirect()->route('cart.checkout');
+    }
         if ($request->filled('donhangsp_id')) {
             $row = DonHangSanPham::findOrFail($request->donhangsp_id);
             match ($request->action) {
@@ -143,14 +146,15 @@ class AddGioHangController extends Controller
                 'remove'   => $row->delete(),
                 default    => null,
             };
-            if (!$request->filled('product_id')) {      // không có buy-now → quay lại cart/checkout
-                return $this->checkout($request);
-            }
+             if (! $request->filled('product_id')) {
+            return $this->checkout($request);
+        }
         }
 
         /* --- 2. Lấy tham số buy-now --- */
         //$user       = auth()->user() ?? abort(401);
         $productId  = $request->product_id;
+        $product   = SanPham::findOrFail($productId);
         $size       = $request->size;
         $colorId    = $request->color_id ?: $request->mausac;
         $quantity   = max(1, (int) $request->quantity);
@@ -172,11 +176,12 @@ class AddGioHangController extends Controller
         $imageUrl   = asset("images/{$filename}");
 
         /* --- 3. gom toàn bộ item giỏ hiện tại --- */
-        $cartItems = [];
-        $donHang   = DonHang::where('nguoidung_id', $user->id)
-                     ->where('trangthai', 1)
-                     ->with(['chiTiet.sanPham','chiTiet.mauSac'])
-                     ->first();
+         $cartItems = [];
+    if ($user) {
+        $donHang = DonHang::where('nguoidung_id', $user->id)
+                         ->where('trangthai', 1)
+                         ->with(['chiTiet.sanPham','chiTiet.mauSac'])
+                         ->first();
 
         if ($donHang) {
             foreach ($donHang->chiTiet as $it) {
@@ -194,6 +199,7 @@ class AddGioHangController extends Controller
                 ];
             }
         }
+    }
 
         /* --- 4. chèn item mua-ngay lên đầu --- */
         array_unshift($cartItems, [
@@ -229,7 +235,7 @@ class AddGioHangController extends Controller
         ]);
     }
 
-    /* ╔═════════════════════ D. THANH TOÁN ══════════════════════════╗ */
+    /* D. THANH TOÁN */
     public function thanhtoan(Request $request)
 {
     $user = auth()->user() ?? abort(401);
@@ -238,6 +244,7 @@ class AddGioHangController extends Controller
         'order_voucher'  => 'nullable|integer',
         'buyNowData'     => 'nullable|array',
     ]);
+    $products = $request->input('products', []);
 
     // 1) Lấy hoặc tạo đơn “mở” (trangthai = 1)
     $donHang = DonHang::firstOrCreate(
@@ -248,10 +255,6 @@ class AddGioHangController extends Controller
             'tongtien'         => 0,
         ]
     );
-
-    // 2) Gom toàn bộ items: mua-ngay + giỏ hàng
-    $items = [];
-
     // 2a) Nếu có mua ngay thì thêm trước
     $bn = $request->input('buyNowData', []);
     if (!empty($bn['product_id'])) {
@@ -280,15 +283,15 @@ class AddGioHangController extends Controller
 
     // 3) Xóa hết chi tiết cũ, rồi insert lại phân biệt size+mausac
     DonHangSanPham::where('donhang_id', $donHang->id)->delete();
-    foreach ($items as $item) {
+    foreach ($products as $item) {
         DonHangSanPham::create([
             'donhang_id' => $donHang->id,
-            'sanpham_id' => $item['sanpham_id'],
+            'sanpham_id' => $item['id'],
             'dongia'     => $item['price'],
             'soluong'    => $item['quantity'],
             'size'       => $item['size'],
             'mausac'     => $item['mausac'],
-            'hinh_anh'   => $item['hinh_anh'],
+            'hinh_anh'   => $item['image'],
         ]);
         // 2) Lookup mã kích cỡ
     $sizeId = DB::table('kichco')
@@ -302,7 +305,7 @@ class AddGioHangController extends Controller
     // 3) Nếu tìm ra cả 2 thì trừ sl
     if ($sizeId && $colorId) {
       DB::table('sanpham_kichco_mausac')
-        ->where('sanpham_id', $item['sanpham_id'])
+        ->where('sanpham_id', $item['id'])
         ->where('kichco_id',  $sizeId)
         ->where('mausac_id',  $colorId)
         ->decrement('sl',     $item['quantity']);
@@ -318,17 +321,18 @@ class AddGioHangController extends Controller
         'tongtien'               => $summary['order']['tongCuoi'],
         'gia_giam'               => $summary['order']['voucherGiam'],
         'phuong_thuc_thanh_toan' => $request->payment_method,
+        'trangthaidonhang'       =>'chuathanhtoan',
         'trangthai'              => 2,
         'thoigianthem'           => now(),
     ]);
 
     // 6) Nếu COD, redirect về chi tiết, nếu VNPAY thì redirect sang VNPAY
         return redirect()
-            ->route('donhang.show', $donHang->id)
+            ->route('donhang.show', ['id' => $donHang->id, 'madon' => $donHang->madon])
             ->with('success', 'Đặt hàng thành công (Thanh toán khi nhận hàng)!');
 }
 
-    /* ╔═════════════════════ E. API ĐỔI ĐỊA CHỈ (AJAX) ══════════════╗ */
+    /*  API ĐỔI ĐỊA CHỈ  */
     public function updateAddress(Request $request)
     {
         $user = auth()->user() ?? abort(401);
@@ -348,7 +352,7 @@ class AddGioHangController extends Controller
         return response()->json(['success'=>true]);
     }
 
-    /* ╔═════════════════════ F. HÀM TRỢ GIÚP ════════════════════════╗ */
+    /* HÀM TRỢ GIÚP */
 
     /** Tính tổng cho luồng giỏ */
     protected function buildSummaryFromCart($collection, $voucherId = null): array
@@ -479,6 +483,7 @@ return redirect()->away($redirectUrl);
     // 2. Callback VNPAY về, verify và lưu đơn
     public function vnpayReturn(Request $request)
 {
+    
     Log::info('VNPAY Return Callback', $request->all());
 
     // 2.1. Verify hash
@@ -507,7 +512,7 @@ return redirect()->away($redirectUrl);
     $type    = $pending['purchase_type'] ?? 'cart';
     $items   = $pending['items']         ?? [];
     $total   = $pending['total_bill']    ?? 0;
-
+    
     if (empty($items)) {
         Log::error('Pending order missing or empty', ['pending'=>$pending]);
         return redirect()->route('cart.index')
@@ -585,8 +590,12 @@ return redirect()->away($redirectUrl);
     Auth::loginUsingId($pending['user_id']);
     // 2.4. Clear session và show view success
     Session::forget('pending_order');
-    return view('payment.success', [
-        'order' => $order,
-    ]);
+    // return view('donhang.show', [
+    //     'order' => $order,
+    //     'madon' => $order->madon,
+    // ]);
+    return redirect()
+            ->route('donhang.show', ['id' => $order->id, 'madon' => $order->madon])
+            ->with('success', 'Đặt hàng thành công (Thanh toán khi nhận hàng)!');
 }
 }

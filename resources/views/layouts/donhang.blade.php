@@ -60,8 +60,9 @@
             {{ $labels[$order->trangthai] }}
           </span>
         </p>
-        <a href="{{ route('donhang.show', $order->id) }}" class="dh-btn dh-btn-info">
-          Xem chi tiết
+        <a href="{{ route('donhang.show', ['id' => $order->id, 'madon' => $order->madon]) }}"
+                    class="dh-btn dh-btn-info">
+            Xem chi tiết
         </a>
       </div>
     </div>

@@ -50,7 +50,7 @@ Route::get('/', function () {
     return view('layouts.chinh', compact('products', 'bomons'));
 })->name('layouts.chinh');
 
-Route::get('chitiet/{id}', [ChiTietController::class, 'show'])->name('product.show');
+Route::get('chitiet/{id}/{slug?}', [ChiTietController::class, 'show'])->name('product.show');
 Route::post('/cart/add/{product}', [ChiTietController::class, 'add'])->name('cart.add');
 Route::middleware('auth')->group(function () {
     Route::post('/wishlist/toggle/{product}', [ChiTietController::class, 'toggle'])->name('wishlist.toggle');
@@ -131,7 +131,7 @@ Route::middleware('auth')->group(function(){
     Route::get('/donhang', [CTDonHangController::class, 'donhang'])
          ->name('donhang.index');
     // chi tiết
-    Route::get('/donhang/{id}', [CTDonHangController::class, 'show'])
+    Route::get('/donhang/{id}/{madon}', [CTDonHangController::class, 'show'])
          ->name('donhang.show');
          // Hủy đơn (PATCH)
     
@@ -141,7 +141,9 @@ Route::patch('donhang/{id}/huy', [CTDonHangController::class, 'cancel'])
      ->name('donhang.cancel')
      ->middleware('auth');
 // giỏ hàng
-
+Route::match(['get','post'], 'giohang/buynow', [AddGioHangController::class, 'buynow'])
+     ->name('cart.buynow');
+Route::get('giohang/checkout', [AddGioHangController::class, 'checkout'])->name('cart.checkout');
 Route::middleware('auth')->group(function(){
     // Hiển thị giỏ hàng
     Route::get('/giohang', [AddGioHangController::class, 'showgiohang'])
@@ -154,16 +156,16 @@ Route::middleware('auth')->group(function(){
     Route::post('/giohang/update/{id}', [AddGioHangController::class, 'update'])
          ->name('cart.update');
     // Xóa item
-    Route::post('/giohang/remove/{id}',[AddGioHangController::class,'remove'])->whereNumber('id')
- ->name('cart.remove');
+    Route::delete('giohang/remove/{id}',[AddGioHangController::class,'remove'])->whereNumber('id')
+          ->name('cart.remove');
+     Route::post('giohang/remove/{id}',[AddGioHangController::class,'remove'])->whereNumber('id')
+          ->name('cart.remove');
         
     // // Thanh toán
 // POST xử lý tăng/giảm/xoá trong luồng “mua ngay”
-    Route::get('giohang/checkout', [AddGioHangController::class, 'checkout'])->name('cart.checkout');
-    Route::get('/giohang/buynow',  [AddGioHangController::class, 'buynow'])
-         ->name('cart.buynow');
+    
     // Xử lý + / – / remove / chọn-voucher của “mua ngay”
-    Route::post('/giohang/buynow', [AddGioHangController::class, 'buynow']);
+    
     // Xử lý đặt hàng (COD hoặc VNPay)
     Route::post('/giohang/thanhtoan', [AddGioHangController::class, 'thanhtoan'])
          ->name('cart.thanhtoan');
@@ -241,10 +243,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     //Đơn Hàng
     Route::get('orders', [AdminController::class, 'ordersIndex'])->name('orders.index');
     Route::get('orders/{order}', [AdminController::class, 'ordersShow'])->name('orders.show');
-    Route::delete('orders/{order}', [AdminController::class, 'ordersDestroy'])->name('orders.destroy');
     Route::patch('orders/{order}/delivery-status', [AdminController::class, 'updateDeliveryStatus'])->name('orders.updateDeliveryStatus');
     Route::patch('orders/{order}/notes', [AdminController::class, 'ordersUpdateNotes'])->name('orders.updateNotes');
     Route::patch('orders/{order}/refund',[AdminController::class, 'ordersRefund'])->name('orders.refund');
+    //Route::delete('orders/{order}', [AdminController::class, 'ordersDestroy'])->name('orders.destroy');
     //Members
     Route::get('/members', [AdminController::class, 'membersIndex'])->name('members.index');
     Route::get('/members/create', [AdminController::class, 'membersCreate'])->name('members.create');

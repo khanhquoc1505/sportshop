@@ -1,16 +1,12 @@
 @extends('home.trangchu')
 @section('title', 'Chi tiết đơn hàng')
 @section('content')
-
-
-
 <div class="ct-container">
   <nav class="ct-breadcrumb">
     <a href="{{ url('/') }}">Trang chủ</a> /
     <a href="{{ route('donhang.index') }}">Đơn hàng của tôi</a> /
     <span>{{ $order->madon }}</span>
   </nav>
-
   <h1 class="ct-title">Mã đơn: {{ $order->madon }}</h1>
   <p class="ct-subtext">Ngày đặt hàng: {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y')}}</p>
   @php

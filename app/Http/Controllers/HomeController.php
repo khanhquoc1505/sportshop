@@ -33,13 +33,13 @@ class HomeController extends Controller
     
     }
 
-    // 1️⃣ Hiển thị form đăng ký
+    // 1️ Hiển thị form đăng ký
     public function showRegisterForm()
     {
         return view('layouts.dangky');
     }
 
-    // 2️⃣ Xử lý form đăng ký: validate, lưu session tạm và gửi OTP
+    // 2️ Xử lý form đăng ký: validate, lưu session tạm và gửi OTP
     public function processRegister(Request $request)
     {
         $validator = Validator::make(
@@ -51,7 +51,7 @@ class HomeController extends Controller
             'dia_chi'        => 'nullable|string|max:255',
             'mat_khau'       => 'required|string|min:6|confirmed',
         ],
-        // ——— Các thông báo tiếng Việt ———
+        //Các thông báo 
         [
             'ten_nguoi_dung.required' => 'Bạn phải nhập họ và tên.',
             'ten_nguoi_dung.string'   => 'Họ và tên không hợp lệ.',
@@ -113,7 +113,7 @@ class HomeController extends Controller
                      ->with('status','Mã xác nhận đã được gửi tới email của bạn.');
     }
 
-    // 3️⃣ Hiển thị form nhập OTP
+    // 3️ Hiển thị form nhập OTP
     public function showRegisterConfirm()
     {
         if (! session()->has('reg_data')) {
@@ -123,7 +123,7 @@ class HomeController extends Controller
         return view('layouts.xacnhan');
     }
 
-    // 4️⃣ Xác nhận OTP và tạo tài khoản
+    // 4️ Xác nhận OTP và tạo tài khoản
     public function confirmRegister(Request $request)
 {
     $request->validate(['otp' => 'required|digits:6']);
@@ -166,18 +166,11 @@ public function login(Request $request)
             ->withErrors(['mat_khau' => 'Sai mật khẩu'])
             ->withInput();
     }
+    // Đăng nhập
+    auth()->login($nguoidung, $request->has('remember'));
 
-    // So sánh mật khẩu đúng y như người dùng nhập (không mã hóa)
-    if ($nguoidung && $nguoidung->mat_khau === $request->mat_khau) {
-        // Ghi nhớ nếu người dùng chọn "remember"
-        auth()->login($nguoidung, $request->has('remember'));
-
-        return redirect()->route('layouts.chinh');
-    }
-
-    return back()->withErrors([
-        'login' => 'Sai thông tin đăng nhập',
-    ]);
+    // Redirect về intended URL, nếu không có thì về '/'
+    return redirect()->intended('/');
 }
 
 public function logout(Request $request)
@@ -213,7 +206,7 @@ public function processForgot(Request $request)
     return redirect()->route('password.change.form');
 }
 
-// 2️⃣ Form nhập mật khẩu mới
+// 2️ Form nhập mật khẩu mới
 public function showChangeForm()
 {
     if (!session('reset_login')) {
@@ -247,7 +240,7 @@ public function sendResetCode(Request $request)
                      ->with('status','Mã xác nhận đã được gửi về email của bạn.');
 }
 
-// 3️⃣ Form nhập OTP
+// 3️ Form nhập OTP
 public function showConfirmForm()
 {
     if (!session('reset_login') || !session('new_plain_password')) {

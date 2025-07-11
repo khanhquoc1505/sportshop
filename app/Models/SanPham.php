@@ -25,6 +25,7 @@ class SanPham extends Model
     protected $fillable = [
         'masanpham',
         'ten',
+        'slug',
         'mo_ta',
         'gia_ban',
         'gia_nhap',

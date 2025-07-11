@@ -134,7 +134,7 @@
             $file = optional($product->avatarImage)->image_path ?? 'default.jpg';
             $img  = asset('images/' . $file);
           @endphp
-          <a href="{{ route('product.show', $product) }}" class="product-card">
+          <a href="{{ route('product.show', ['id'   => $product->id,'slug' => $product->slug,]) }}" class="product-card">
             <div class="card-image">
               <img src="{{ $img }}" alt="{{ $product->ten }}">
             </div>

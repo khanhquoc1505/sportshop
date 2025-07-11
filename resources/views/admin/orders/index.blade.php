@@ -27,7 +27,6 @@
           <th class="px-4 py-2">Hình thức Giao hàng</th>
           <th class="px-4 py-2">Trạng thái Giao</th>
           <th class="px-4 py-2">Tổng tiền (VNĐ)</th>
-          <th class="px-4 py-2">Xóa</th>
         </tr>
       </thead>
       <tbody>
@@ -47,7 +46,7 @@
             </td>
 
             {{-- Khách hàng --}}
-            <td class="px-4 py-2">{{ $o['customer'] }}</td>
+            <td class="px-4 py-2">{{ $o->user->ten_nguoi_dung }}</td>
 
             {{-- Thanh toán --}}
             <td class="px-4 py-2">
@@ -65,7 +64,7 @@
                   <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Đã hoàn tiền</span>
                   @break
                 @default
-                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Không xác định</span>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Hủy đặt hàng</span>
               @endswitch
             </td>
 
@@ -129,10 +128,9 @@
             </td>
 
             {{-- Xóa --}}
-            <td class="px-4 py-2 text-center">
+           <!--  <td class="px-4 py-2 text-center">
               @php
-                $canDelete = $o['order_status'] === 'dahuy'
-                             && in_array($o['trangthai'], [2, 4]);
+                $canDelete = $o['order_status'] === 'huy' && in_array($o['trangthai'], [2]);
               @endphp
 
               @if($canDelete)
@@ -153,7 +151,7 @@
                   Xóa
                 </button>
               @endif
-            </td>
+            </td> -->
           </tr>
         @empty
           <tr>

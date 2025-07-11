@@ -5,7 +5,7 @@
 
 {{-- 1) Search + Filter --}}
 <div class="flex flex-wrap gap-3 items-center mb-6">
-  <input id="feedbackSearch" type="text" placeholder="Nhập ID, sản phẩm, khách hàng..." class="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary w-64" />
+  <input id="feedbackSearch" type="text" placeholder="Nhập mã sản phẩm, tên khách hàng" class="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary w-64" />
   <select id="feedbackRepliedFilter" class="px-4 py-2 border rounded focus:ring-2 focus:ring-primary">
     <option value="">-- Trạng thái trả lời --</option>
     <option value="1">Đã trả lời</option>

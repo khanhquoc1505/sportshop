@@ -69,7 +69,7 @@
       <td class="px-4 py-2">{{ $voucher->soluong }}</td>
       <td class="px-4 py-2">{{ $voucher->ngay_bat_dau }}</td>
       <td class="px-4 py-2">{{ $voucher->ngay_ket_thuc }}</td>
-      <td class="px-4 py-2 space-x-2">
+      <td class="px-4 py-2">
       <a href="{{ route('admin.vouchers.edit', $voucher->id) }}"
       class="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">Sửa</a>
       <form action="{{ route('admin.vouchers.destroy', $voucher->id) }}" method="POST" class="inline-block"

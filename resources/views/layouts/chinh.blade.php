@@ -30,11 +30,11 @@
     @endphp
 
     <div class="product-card">
-      <a href="{{ route('product.show', $product) }}"
+      <a href="{{ route('product.show', ['id'   => $product->id,'slug' => $product->slug,]) }}"
          class="product-card-img-wrapper"
          title="{{ $product->ten }}">
         <img src="{{ $imgPath }}"
-             alt="{{ $product->ten }}"
+             alt="{{ $product->slug }}"
              class="product-card-img">
       </a>
 
@@ -123,7 +123,7 @@
         <div class="tab-product-card">
           <img
             src="{{ $imgUrl }}"
-            alt="{{ $product->ten }}"
+            alt="{{ $product->slug }}"
           >
           <h4>{{ $product->ten }}</h4>
           <div class="tab-product-price">
