@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use App\Models\DonHang;
 use App\Models\Voucher;
+use App\Models\NguoiDung;
+use Illuminate\Support\Facades\Hash;
 
 class CSThongTinController extends Controller
 {
@@ -14,13 +16,39 @@ class CSThongTinController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('layouts.csthongtin', compact('user'));
+        return view('account.profile', compact('user'));
     }
 
     public function editProfile()
     {
         $user = Auth::user();
-        return view('layouts.csthongtin', compact('user'));
+        return view('account.profile', compact('user'));
+    }
+     public function favorites()
+{
+    // Lấy user
+    $user = Auth::user();
+
+    // Lấy sản phẩm yêu thích, kèm ảnh chính
+    $favorites = $user
+        ->favorites()
+        ->with('avatarImage')    // eager load ảnh chính
+        ->get();
+
+    // Đưa lên view
+    return view('account.favorites', compact('favorites'));
+}
+public function removeFavorite($productId)
+    {
+        $user = Auth::user();
+
+        // Nếu dùng quan hệ ManyToMany (pivot), detach productId
+        $user->favorites()->detach($productId);
+
+        // Chuyển về lại trang favorites kèm flash message
+        return redirect()
+            ->route('favorites.index')
+            ->with('success', 'Đã xóa sản phẩm khỏi yêu thích.');
     }
 
     public function updateProfile(Request $request)
@@ -141,5 +169,27 @@ class CSThongTinController extends Controller
     {
         $coins = Auth::user()->coins ?? 0;
         return view('account.coins', compact('coins'));
+    }
+    // Hiển thị form đổi mật khẩu
+    public function showChangePasswordForm()
+    {
+        return view('account.change-password');
+    }
+
+    // Xử lý đổi mật khẩu (chỉ new_password và confirmation)
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ], [
+            'new_password.confirmed' => 'Mật khẩu nhập lại không khớp.',
+        ]);
+
+        // Cập nhật trực tiếp
+        Auth::user()->update([
+            'mat_khau' => Hash::make($request->new_password),
+        ]);
+
+        return back()->with('success', 'Đổi mật khẩu thành công.');
     }
 }

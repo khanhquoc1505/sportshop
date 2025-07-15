@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Exports\RevenueExport;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\images; 
 use App\Models\SanPham;
 use Illuminate\Http\RedirectResponse;
 use App\Models\DonHangChiTiet;
@@ -29,6 +29,7 @@ use App\Models\KichCo;
 use App\Models\MauSac;
 use App\Models\Feedback;
 use App\Models\SanPhamKichCoMauSac;
+use Storage;
 
 class AdminController extends Controller
 {
@@ -291,7 +292,7 @@ public function variantEdit($id)
                     ->where('mausac_id', $variant->mausac_id)
                     ->where('kichco_id', $variant->kichco_id)
                     ->each(function($img){
-                        Storage::disk('public')->delete($img->image_path);
+                        images::disk('public')->delete($img->image_path);
                         $img->delete();
                     });
 
@@ -458,8 +459,8 @@ public function productCreate()
 
         // Xóa ảnh liên quan nếu có
         foreach ($product->images as $image) {
-            if (\Storage::exists(str_replace('storage/', 'public/', $image->image_path))) {
-                \Storage::delete(str_replace('storage/', 'public/', $image->image_path));
+            if (\images::exists(str_replace('images/', 'public/', $image->image_path))) {
+                \images::delete(str_replace('images/', 'public/', $image->image_path));
             }
             $image->delete();
         }
@@ -694,7 +695,7 @@ if ($request->filled('search')) {
         $img = optional($item->product->colorImages->first())->image_path;
         return [
             'image_url' => $img 
-                ? asset('storage/' . $img) 
+                ? asset('images/' . $img) 
                 : 'https://via.placeholder.com/50',
             'name'     => $item->product->ten,
             'sku'      => $item->product->masanpham,

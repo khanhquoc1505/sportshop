@@ -61,5 +61,15 @@ public function getDecryptedPasswordAttribute()
     {
         return $this->hasOne(Member::class, 'user_id');
     }
-
+public function favorites()
+    {
+        return $this->belongsToMany(
+            SanPham::class,    // model đích
+            'yeuthich',        // bảng pivot
+            'nguoidung_id',    // FK về user
+            'sanpham_id'       // FK về product
+        )
+        ->withPivot('thoi_gian_them')   // nếu bạn cần lấy thêm cột này
+        ->withTimestamps();
+    }
 }

@@ -19,6 +19,14 @@
 }
 
 /* ========== FF SIDEBAR ========== */
+.ff-profile-sidebar{
+  background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* padding: 20px; */
+    margin-bottom: 20px;
+}
 .ff-profile-sidebar .card {
   background: transparent;
   border: none;
@@ -59,7 +67,9 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  margin-bottom: 2rem;
 }
+
 .ff-menu-item {
   display: flex;
   align-items: center;
@@ -125,7 +135,11 @@
   border-top: 1px solid #e5e5e5;
   margin: 1.5rem 0;
 }
-
+.ff-form-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 16px 0;
+  }
 .ff-form-group {
   margin-bottom: 1.5rem;
 }
@@ -240,8 +254,12 @@
   margin: 0 auto; /* canh giữa */
 }
 .ff-form-card {
-  border-left: 1px solid;
-    padding-left: 1rem;
+   background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
 }
 /* ảnh thật */
 .ff-avatar-preview {
@@ -286,5 +304,62 @@
   .ff-form-right {
     width: 100%;
     min-width: auto;
+  }
+}
+/* === 1. Highlight sidebar item đang active === */
+.ff-menu-item.active {
+  background-color: #f3f4f6;    /* nền sáng hơn */
+  border-radius: 4px;
+}
+.ff-menu-item.active .ff-menu-icon,
+.ff-menu-item.active a {
+  color: #ef4444;               /* đổi màu icon và text */
+}
+
+/* === 4. Responsive cho bảng favorites === */
+@media (max-width: 640px) {
+  /* Cho phép cuộn ngang */
+  .ff-form-card {
+    overflow-x: auto;
+  }
+  .ff-form-card table {
+    min-width: 600px;           /* đảm bảo đủ chỗ hiển thị đủ cột */
+    width: auto;
+  }
+
+  /* Hoặc muốn chuyển thành dạng “card list” thì dùng cách này: */
+  .ff-form-card table thead {
+    display: none;              /* ẩn header */
+  }
+  .ff-form-card table,
+  .ff-form-card tbody,
+  .ff-form-card tr {
+    display: block;
+    width: 100%;
+  }
+  .ff-form-card tr {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+  }
+  .ff-form-card td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+  }
+  .ff-form-card td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    flex: 1;
+  }
+  .ff-form-card td:nth-child(1)::before { content: "Hình ảnh"; }
+  .ff-form-card td:nth-child(2)::before { content: "Tên sản phẩm"; }
+  .ff-form-card td:nth-child(3)::before { content: "Giá"; }
+  .ff-form-card td:nth-child(4)::before { content: ""; } /* nút add cart nếu có */
+  .ff-form-card td:nth-child(5)::before { content: "Xóa"; }
+
+  /* Ẩn dấu ::before của cột vô nghĩa */
+  .ff-form-card td:nth-child(4)::before {
+    display: none;
   }
 }

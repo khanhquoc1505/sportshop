@@ -87,7 +87,10 @@ Route::middleware('auth')->group(function () {
          ->name('profile.change_phone');
     Route::post('/profile/phone',    [CSThongTinController::class, 'updatePhone'])
          ->name('profile.update_phone');
-
+     Route::get('/favorites', [CSThongTinController::class, 'favorites'])
+         ->name('favorites.index');
+     Route::delete('/favorites/{productId}', [CSThongTinController::class, 'removeFavorite'])
+         ->name('favorites.remove');
     // === Đơn mua ===
     // Xem chi tiết
     Route::get('/orders/{id}',       [CSThongTinController::class, 'orderShow'])
@@ -96,6 +99,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{id}/cancel',
          [CSThongTinController::class, 'orderCancel'])
          ->name('orders.cancel');
+         // Hiển thị form
+Route::get('/profile/password', [CSThongTinController::class, 'showChangePasswordForm'])
+     ->name('profile.change_password')
+     ->middleware('auth');
+
+// Xử lý đổi mật khẩu
+Route::patch('/profile/password', [CSThongTinController::class, 'changePassword'])
+     ->name('profile.update_password')
+     ->middleware('auth');
 });
 ////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +219,7 @@ Route::get('/quenmatkhau', function () {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     // Quản lý sản phẩm

@@ -80,15 +80,29 @@ class AddGioHangController extends Controller
     }
 
     /** + / – trong giỏ */
-    public function update(Request $req, $id)
+     public function update(Request $req, $id)
     {
-        $row = DonHangSanPham::findOrFail($id);
+        $row    = DonHangSanPham::findOrFail($id);
+        $action = $req->action;
 
-        match ($req->action) {
-            'increase' => $row->increment('soluong'),
-            'decrease' => $row->update(['soluong' => max(1, $row->soluong - 1)]),
-            default    => null,
-        };
+        // Lấy stock theo variant đang có
+        $sizeId  = DB::table('kichco')->where('size', $row->size)->value('id');
+        $colorId = DB::table('mausac')->where('mausac', $row->mausac)->value('id');
+        $stock   = DB::table('sanpham_kichco_mausac')
+            ->where('sanpham_id', $row->sanpham_id)
+            ->where('kichco_id', $sizeId)
+            ->where('mausac_id', $colorId)
+            ->value('sl');
+
+        if ($action === 'increase') {
+            if (is_null($stock) || $row->soluong < $stock) {
+                $row->increment('soluong');
+            } else {
+                return back()->with('error', "Không thể tăng, tồn kho chỉ còn {$stock} món.");
+            }
+        } elseif ($action === 'decrease') {
+            $row->update(['soluong' => max(1, $row->soluong - 1)]);
+        }
 
         return back();
     }
@@ -128,112 +142,144 @@ class AddGioHangController extends Controller
             'buyNowData'        => [],
         ]);
     }
+     public function __construct()
+    {
+        // Chỉ bảo vệ các action thay đổi DB
+        $this->middleware('auth')->only([
+          'themgiohang',
+          'update',
+          'remove',
+          'thanhtoan',
+          'vnpay_payment',
+          'vnpayReturn',
+        ]);
+    }
 
     /* LUỒNG “MUA NGAY”*/
-    public function buynow(Request $request)
+   public function buynow(Request $request)
     {
-        //$user = auth()->user() ?? abort(401);
-        $user = auth()->user();
-        /* --- 1. Nếu submit chỉ để ++/--/xóa item giỏ thì xử luôn rồi hiển thị lại --- */
-        if (! $request->filled('product_id') && ! $request->filled('donhangsp_id')) {
-        return redirect()->route('cart.checkout');
-    }
-        if ($request->filled('donhangsp_id')) {
+        //dd($request->only(['product_id','size','mausac','quantity','action']));
+        // 1) Lấy user
+        $user   = auth()->user();
+        $action = $request->input('action');
+        
+
+        // 2) Nếu thao tác trên DB-item (user đã login)
+        if ($user && $request->filled('donhangsp_id')) {
             $row = DonHangSanPham::findOrFail($request->donhangsp_id);
-            match ($request->action) {
+            match ($action) {
                 'increase' => $row->increment('soluong'),
                 'decrease' => $row->update(['soluong' => max(1, $row->soluong - 1)]),
                 'remove'   => $row->delete(),
-                default    => null,
             };
-             if (! $request->filled('product_id')) {
-            return $this->checkout($request);
+            if (! $request->filled('product_id')) {
+                return redirect()->route('cart.checkout');
+            }
         }
+
+        // 3) Đọc trực tiếp từ request
+        $buyNow = [
+            'product_id'    => $request->input('product_id'),
+            'size'          => $request->input('size'),
+            'mausac'        => $request->input('mausac'),
+            //'mausac' => $request->input('color_id'),
+            'quantity'      => max(1, (int)$request->input('quantity', 1)),
+            'order_voucher' => $request->input('order_voucher'),
+            'color_name'    => $request->input('color_name'),
+            'image_path'    => $request->input('image_path'),
+        ];
+
+        // 4) Lấy color_name, image_path
+        $product = SanPham::findOrFail($buyNow['product_id']);
+        if (! $buyNow['image_path']) {
+            $rec = ColorImage::with('mauSac')
+                ->where('sanpham_id', $product->id)
+                ->where('mausac_id', $buyNow['mausac'])
+                ->first();
+        $buyNow['color_name'] = optional($rec?->mauSac)->mausac ?: 'Mặc định';
+        $buyNow['image_path'] = $rec?->image_path ?: $product->thumbnail;
         }
+        // 5) Tính stock
+        $sizeId  = DB::table('kichco')->where('size', $buyNow['size'])->value('id');
+        $colorId = $buyNow['mausac']; // đây là ID màu bạn đã đọc ở bước 3
+       $buyNow['stock'] = DB::table('sanpham_kichco_mausac')
+            ->where('sanpham_id', $product->id)
+            ->where('kichco_id',  $sizeId)
+            ->where('mausac_id',  $colorId)
+            ->value('sl')
+            ?? 0;
 
-        /* --- 2. Lấy tham số buy-now --- */
-        //$user       = auth()->user() ?? abort(401);
-        $productId  = $request->product_id;
-        $product   = SanPham::findOrFail($productId);
-        $size       = $request->size;
-        $colorId    = $request->color_id ?: $request->mausac;
-        $quantity   = max(1, (int) $request->quantity);
-        $action     = $request->action;
-        $voucherId  = $request->order_voucher;
+        // 6) Nếu guest mua-ngay, chỉ điều chỉnh số lượng tại đây
+        if (! $request->filled('donhangsp_id')) {
+        // đây là luồng MUA NGAY, cho phép tăng/giảm bất kể login hay không
+        if ($action === 'increase' && $buyNow['quantity'] < $buyNow['stock']) {
+            $buyNow['quantity']++;
+        }
+        if ($action === 'decrease') {
+            $buyNow['quantity'] = max(1, $buyNow['quantity'] - 1);
+        }
+        if ($action === 'remove') {
+            return redirect()->route('cart.index');
+        }
+    }
 
-        if ($action === 'increase')       $quantity++;
-        elseif ($action === 'decrease')   $quantity = max(1, $quantity-1);
-        elseif ($action === 'remove')     return redirect()->route('layouts.chinh');
-
-        $product    = SanPham::findOrFail($productId);
-        $colorRec   = ColorImage::with('mauSac')
-                       ->where('sanpham_id', $productId)->where('mausac_id', $colorId)->first();
-
-        $colorName  = $request->color_name
-                     ?: optional($colorRec?->mauSac)->mausac ?: 'Mặc định';
-        $filename   = $request->image_path
-                     ?: ($colorRec?->image_path ?: $product->thumbnail ?: 'default.jpg');
-        $imageUrl   = asset("images/{$filename}");
-
-        /* --- 3. gom toàn bộ item giỏ hiện tại --- */
-         $cartItems = [];
-    if ($user) {
-        $donHang = DonHang::where('nguoidung_id', $user->id)
-                         ->where('trangthai', 1)
-                         ->with(['chiTiet.sanPham','chiTiet.mauSac'])
-                         ->first();
-
-        if ($donHang) {
+        // 7) Load DB-items nếu có user
+        $cartItems = [];
+        if ($user) {
+            $donHang = DonHang::firstOrCreate(
+                ['nguoidung_id'=>$user->id,'trangthai'=>1],
+                ['madon'=>'DH'.now()->format('YmdHis').Str::random(3),'tongtien'=>0,'trangthaidonhang'=>'chuadathang']
+            );
+            $donHang->load('chiTiet.sanPham','chiTiet.mauSac');
             foreach ($donHang->chiTiet as $it) {
+                $stockDb = DB::table('sanpham_kichco_mausac')
+                    ->where('sanpham_id',$it->sanpham_id)
+                    ->where('kichco_id', DB::table('kichco')->where('size',$it->size)->value('id'))
+                    ->where('mausac_id', DB::table('mausac')->where('mausac',$it->mausac)->value('id'))
+                    ->value('sl');
                 $cartItems[] = [
-                    'sanpham_id'   => $it->sanpham_id,
-                    'image_url'    => asset('images/'.$it->hinh_anh),
-                    'name'         => $it->sanPham->ten,
-                    'quantity'     => $it->soluong,
-                    'price'        => $it->dongia,
-                    'size'         => $it->size,
-                    'mausac'       => optional($it->mauSac)->mausac ?: $it->mausac,
-                    'total'        => $it->dongia * $it->soluong,
-                    'donhangsp_id' => $it->id,
-                    'is_buynow'    => false,
+                    'sanpham_id'=>$it->sanpham_id,
+                    'image_url'=>asset('images/'.$it->hinh_anh),
+                    'name'=>$it->sanPham->ten,
+                    'quantity'=>$it->soluong,
+                    'price'=>$it->dongia,
+                    'size'=>$it->size,
+                    'mausac'=>$it->mausac,
+                    'total'=>$it->dongia*$it->soluong,
+                    'stock'=>$stockDb,
+                    'donhangsp_id'=>$it->id,
+                    'is_buynow'=>false,
                 ];
             }
         }
-    }
 
-        /* --- 4. chèn item mua-ngay lên đầu --- */
+        // 8) Đẩy mua-ngay lên đầu
         array_unshift($cartItems, [
-            'sanpham_id'   => $productId,
-            'image_url'    => $imageUrl,
-            'name'         => $product->ten,
-            'quantity'     => $quantity,
-            'price'        => $product->gia_ban,
-            'size'         => $size,
-            'mausac'       => $colorName,
-            'total'        => $product->gia_ban * $quantity,
-            'donhangsp_id' => null,
-            'is_buynow'    => true,
+            'sanpham_id'=>$product->id,
+            'image_url'=>asset("images/{$buyNow['image_path']}"),
+            'name'=>$product->ten,
+            'quantity'=>$buyNow['quantity'],
+            'price'=>$product->gia_ban,
+            'size'=>$buyNow['size'],
+            'mausac'=>$buyNow['color_name'],
+            'total'=>$product->gia_ban*$buyNow['quantity'],
+            'stock'=>$buyNow['stock'],
+            'donhangsp_id'=>null,
+            'is_buynow'=>true,
         ]);
 
-        /* --- 5. tính tổng, voucher, ship --- */
-        $summary = $this->buildSummaryFromArray($cartItems, $voucherId);
-
-        /* --- 6. render view --- */
+        // 9) Summary + render
+        $summary = $this->buildSummaryFromArray($cartItems, $buyNow['order_voucher']);
         return view('layouts.thanhtoan', [
-            'user'              => $user,
-            'order'             => $summary['order'],
-            'availableVouchers' => $summary['availableVouchers'],
-            'mode'              => 'buynow',
-            'buyNowData'        => [
-                'product_id'  => $productId,
-                'quantity'    => $quantity,
-                'size'        => $size,
-                'color_id'    => $colorId,
-                'color_name'  => $colorName,
-                'image_path'  => $filename,
-            ],
+            'user'=>$user,
+            'order'=>$summary['order'],
+            'availableVouchers'=>$summary['availableVouchers'],
+            'mode'=>'buynow',
+            'buyNowData'=>$buyNow,
         ]);
     }
+
+
 
     /* D. THANH TOÁN */
     public function thanhtoan(Request $request)
@@ -358,6 +404,14 @@ class AddGioHangController extends Controller
     protected function buildSummaryFromCart($collection, $voucherId = null): array
     {
         $items = $collection->map(function ($it) {
+            // lookup stock
+        $sizeId  = DB::table('kichco')->where('size', $it->size)->value('id');
+        $colorId = DB::table('mausac')->where('mausac', $it->mausac)->value('id');
+        $stock   = DB::table('sanpham_kichco_mausac')
+            ->where('sanpham_id', $it->sanpham_id)
+            ->where('kichco_id', $sizeId)
+            ->where('mausac_id', $colorId)
+            ->value('sl');
             return [
                 'sanpham_id'   => $it->sanpham_id,
                 'image_url'    => asset('images/'.$it->hinh_anh),
@@ -367,6 +421,7 @@ class AddGioHangController extends Controller
                 'size'         => $it->size,
                 'mausac'       => optional($it->mauSac)->mausac ?: $it->mausac,
                 'total'        => $it->dongia * $it->soluong,
+                'stock'        => $stock,
                 'donhangsp_id' => $it->id,
                 'is_buynow'    => false,
             ];

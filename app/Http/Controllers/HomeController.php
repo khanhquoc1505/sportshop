@@ -144,34 +144,36 @@ class HomeController extends Controller
     return redirect()->route('login')
                      ->with('success','Đăng ký thành công! Vui lòng đăng nhập.');
 }
-
-public function login(Request $request)
+public function showLoginForm()
 {
-    $request->validate([
-        'login' => 'required',
-        'mat_khau' => 'required|string',
-    ]);
-
-    $login_type = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'sdt';
-
-    // Tìm người dùng theo email hoặc sdt
-    $nguoidung = NguoiDung::where($login_type, $request->login)->first();
-    if (! $nguoidung) {
-        return back()
-            ->withErrors(['login' => 'Tài khoản không tồn tại'])
-            ->withInput();
-    }
-    if ($nguoidung->mat_khau !== $request->mat_khau) {
-        return back()
-            ->withErrors(['mat_khau' => 'Sai mật khẩu'])
-            ->withInput();
-    }
-    // Đăng nhập
-    auth()->login($nguoidung, $request->has('remember'));
-
-    // Redirect về intended URL, nếu không có thì về '/'
-    return redirect()->intended('/');
+    return view('layouts.login'); // hoặc đường dẫn blade của em
 }
+public function login(Request $request)
+    {
+        $request->validate([
+            'login'    => 'required',
+            'mat_khau' => 'required|string',
+        ]);
+
+        $field = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'sdt';
+        $user  = NguoiDung::where($field, $request->login)->first();
+
+        if (! $user || $user->mat_khau !== $request->mat_khau) {
+            return back()
+                ->withErrors(['login'=>'Email/SĐT hoặc mật khẩu không đúng'])
+                ->withInput();
+        }
+
+        Auth::login($user, $request->has('remember'));
+
+        // nếu có pending buy-now, redirect về lại checkout
+        if ($data = session()->pull('pending_buy_now')) {
+            return redirect()->route('cart.buynow', $data);
+        }
+
+        // không có pending, fallback về intended (nếu bạn có dùng)
+        return redirect()->intended('/');
+    }
 
 public function logout(Request $request)
 {
