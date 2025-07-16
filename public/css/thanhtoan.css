@@ -169,3 +169,10 @@
     white-space:nowrap;
     padding:0.6rem 2.5rem;
 }
+.payment-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}

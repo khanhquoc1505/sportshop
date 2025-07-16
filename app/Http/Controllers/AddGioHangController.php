@@ -162,6 +162,19 @@ class AddGioHangController extends Controller
         // 1) Lấy user
         $user   = auth()->user();
         $action = $request->input('action');
+        if (! auth()->check() && $request->filled('product_id')) {
+        session([
+            'pending_buy_now' => $request->only([
+                'product_id',
+                'size',
+                'mausac',
+                'quantity',
+                'order_voucher',
+                'color_name',
+                'image_path',
+            ]),
+        ]);
+    }
         
 
         // 2) Nếu thao tác trên DB-item (user đã login)
@@ -200,14 +213,29 @@ class AddGioHangController extends Controller
         $buyNow['image_path'] = $rec?->image_path ?: $product->thumbnail;
         }
         // 5) Tính stock
-        $sizeId  = DB::table('kichco')->where('size', $buyNow['size'])->value('id');
-        $colorId = $buyNow['mausac']; // đây là ID màu bạn đã đọc ở bước 3
-       $buyNow['stock'] = DB::table('sanpham_kichco_mausac')
-            ->where('sanpham_id', $product->id)
-            ->where('kichco_id',  $sizeId)
-            ->where('mausac_id',  $colorId)
-            ->value('sl')
-            ?? 0;
+       $existingInCart = 0;
+if (auth()->check()) {
+    $orderId = DonHang::where('nguoidung_id', $user->id)
+                      ->where('trangthai', 1)
+                      ->value('id');
+    $existingInCart = DonHangSanPham::where('donhang_id', $orderId)
+        ->where('sanpham_id', $product->id)
+        ->where('size',        $buyNow['size'])
+        ->where('mausac',      $buyNow['color_name'])  // Lọc đúng màu
+        ->sum('soluong');
+}
+
+// 5b) Lấy tổng stock pivot
+$sizeId  = DB::table('kichco')       ->where('size', $buyNow['size'])->value('id');
+$colorId = $buyNow['mausac']; // ID màu từ request
+$dbStock = DB::table('sanpham_kichco_mausac')
+    ->where('sanpham_id', $product->id)
+    ->where('kichco_id',  $sizeId)
+    ->where('mausac_id',  $colorId)
+    ->value('sl') ?? 0;
+
+// 5c) Trừ đi số đã có trong giỏ
+$buyNow['stock'] = max(0, $dbStock - $existingInCart);
 
         // 6) Nếu guest mua-ngay, chỉ điều chỉnh số lượng tại đây
         if (! $request->filled('donhangsp_id')) {

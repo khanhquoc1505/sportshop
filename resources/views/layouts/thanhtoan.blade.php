@@ -213,54 +213,63 @@
 
   {{-- 5) Nút đặt hàng / đăng nhập --}}
   @auth
-    {{-- COD --}}
-    <form method="POST" action="{{ route('cart.thanhtoan') }}" class="mb-4">
-      @csrf
-      <x-keep :data="$buyNowData" />
-      <input type="hidden" name="order_voucher"  value="{{ request('order_voucher') }}">
-      <input type="hidden" name="payment_method" value="cod">
-      @foreach($order['items'] as $i => $it)
-        <input type="hidden" name="products[{{ $i }}][id]"       value="{{ $it['sanpham_id'] }}">
-        <input type="hidden" name="products[{{ $i }}][quantity]" value="{{ $it['quantity']    }}">
-        <input type="hidden" name="products[{{ $i }}][price]"    value="{{ $it['price']       }}">
-        <input type="hidden" name="products[{{ $i }}][size]"     value="{{ $it['size']        }}">
-        <input type="hidden" name="products[{{ $i }}][mausac]"   value="{{ $it['mausac']      }}">
-        <input type="hidden" name="products[{{ $i }}][image]"    value="{{ $it['image_url']   }}">
-      @endforeach
-      <input type="hidden" name="total" value="{{ $order['tongCuoi'] }}">
-      <button class="tt-order-btn">Đặt hàng</button>
-    </form>
+    <div class="payment-actions">
+  {{-- COD --}}
+  <form method="POST" action="{{ route('cart.thanhtoan') }}">
+    @csrf
+    <x-keep :data="$buyNowData" />
+    <input type="hidden" name="order_voucher"  value="{{ request('order_voucher') }}">
+    <input type="hidden" name="payment_method" value="cod">
+    @foreach($order['items'] as $i => $it)
+      <input type="hidden" name="products[{{ $i }}][id]"       value="{{ $it['sanpham_id'] }}">
+      <input type="hidden" name="products[{{ $i }}][quantity]" value="{{ $it['quantity']    }}">
+      <input type="hidden" name="products[{{ $i }}][price]"    value="{{ $it['price']       }}">
+      <input type="hidden" name="products[{{ $i }}][size]"     value="{{ $it['size']        }}">
+      <input type="hidden" name="products[{{ $i }}][mausac]"   value="{{ $it['mausac']      }}">
+      <input type="hidden" name="products[{{ $i }}][image]"    value="{{ $it['image_url']   }}">
+    @endforeach
+    <input type="hidden" name="total" value="{{ $order['tongCuoi'] }}">
+    <button class="tt-order-btn">Đặt hàng</button>
+  </form>
 
-    {{-- VNPAY --}}
-    <form method="POST" action="{{ route('vnpay.payment') }}">
-      @csrf
-      <input type="hidden" name="total_vnpay" value="{{ $order['tongCuoi'] }}">
-      @php
-        $all = []; $skipKey = null;
-        if (!empty($buyNowData['product_id'])) {
-          $all[] = [
-            'id'=>$buyNowData['product_id'], 'quantity'=>$buyNowData['quantity'],
-            'price'=>\App\Models\SanPham::find($buyNowData['product_id'])->gia_ban,
-            'size'=>$buyNowData['size'],'mausac'=>$buyNowData['color_name'],'image'=>$buyNowData['image_path'],
-          ];
-          $skipKey = $buyNowData['product_id'].'_'.$buyNowData['size'].'_'.$buyNowData['color_name'];
-        }
-        foreach ($order['items'] as $it) {
-          $key = $it['sanpham_id'].'_'.$it['size'].'_'.$it['mausac'];
-          if ($skipKey && $key === $skipKey) continue;
-          $all[] = ['id'=>$it['sanpham_id'],'quantity'=>$it['quantity'],'price'=>$it['price'],'size'=>$it['size'],'mausac'=>$it['mausac'],'image'=>$it['image_url']];
-        }
-      @endphp
-      @foreach ($all as $i => $item)
-        <input type="hidden" name="products[{{ $i }}][id]"       value="{{ $item['id'] }}">
-        <input type="hidden" name="products[{{ $i }}][quantity]" value="{{ $item['quantity'] }}">
-        <input type="hidden" name="products[{{ $i }}][price]"    value="{{ $item['price'] }}">
-        <input type="hidden" name="products[{{ $i }}][size]"     value="{{ $item['size'] }}">
-        <input type="hidden" name="products[{{ $i }}][mausac]"   value="{{ $item['mausac'] }}">
-        <input type="hidden" name="products[{{ $i }}][image]"    value="{{ $item['image'] }}">
-      @endforeach
-      <button class="tt-order-btn-secondary">Thanh toán VNPAY</button>
-    </form>
+  {{-- VNPAY --}}
+  <form method="POST" action="{{ route('vnpay.payment') }}">
+    @csrf
+    <input type="hidden" name="total_vnpay" value="{{ $order['tongCuoi'] }}">
+    @php
+      $all = []; $skipKey = null;
+      if (!empty($buyNowData['product_id'])) {
+        $all[] = [
+          'id'=>$buyNowData['product_id'], 'quantity'=>$buyNowData['quantity'],
+          'price'=>\App\Models\SanPham::find($buyNowData['product_id'])->gia_ban,
+          'size'=>$buyNowData['size'],'mausac'=>$buyNowData['color_name'],'image'=>$buyNowData['image_path'],
+        ];
+        $skipKey = $buyNowData['product_id'].'_'.$buyNowData['size'].'_'.$buyNowData['color_name'];
+      }
+      foreach ($order['items'] as $it) {
+        $key = $it['sanpham_id'].'_'.$it['size'].'_'.$it['mausac'];
+        if ($skipKey && $key === $skipKey) continue;
+        $all[] = [
+          'id'=>$it['sanpham_id'],
+          'quantity'=>$it['quantity'],
+          'price'=>$it['price'],
+          'size'=>$it['size'],
+          'mausac'=>$it['mausac'],
+          'image'=>$it['image_url'],
+        ];
+      }
+    @endphp
+    @foreach ($all as $i => $item)
+      <input type="hidden" name="products[{{ $i }}][id]"       value="{{ $item['id'] }}">
+      <input type="hidden" name="products[{{ $i }}][quantity]" value="{{ $item['quantity'] }}">
+      <input type="hidden" name="products[{{ $i }}][price]"    value="{{ $item['price'] }}">
+      <input type="hidden" name="products[{{ $i }}][size]"     value="{{ $item['size'] }}">
+      <input type="hidden" name="products[{{ $i }}][mausac]"   value="{{ $item['mausac'] }}">
+      <input type="hidden" name="products[{{ $i }}][image]"    value="{{ $item['image'] }}">
+    @endforeach
+    <button class="tt-order-btn-secondary">Thanh toán VNPAY</button>
+  </form>
+</div>
   @else
   <div class="tt-guest-notice">
     <p>Bạn có thể “Mua ngay” nhưng để nhận ưu đãi, hãy đăng nhập hoặc đăng ký.</p>

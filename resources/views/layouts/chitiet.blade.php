@@ -1,6 +1,18 @@
 @extends('home.trangchu')
 @section('title', $product->ten)
 @section('content')
+@php
+    // Chuẩn bị mảng biến thể thuần PHP
+    $variants = $product->variants
+        ->map(fn($v) => [
+            'color_id' => $v->mauSac->id,
+            'size'     => $v->kichCo->size,
+            'stock'    => $v->sl,
+        ])
+        ->values()
+        ->toArray();
+@endphp
+
 <div class="ct-product-tong">
   <div class="ct-product-detail">
     <div class="ct-product-detail-container">
@@ -186,6 +198,8 @@
   @endforelse
 
 </div>
-
+<script>
+  window.productVariants = @json($variants);
+</script>
 
 @endsection

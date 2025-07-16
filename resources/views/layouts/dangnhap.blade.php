@@ -2,7 +2,7 @@
 @section('title', 'Đăng nhập')
 @section('content')
 
-<form class="login-form" method="POST" action="{{ route('login') }}">
+<form class="login-form" method="POST" action="{{ route('login.post') }}">
   @csrf
 
   {{-- Nếu muốn show tất cả lỗi chung --}}

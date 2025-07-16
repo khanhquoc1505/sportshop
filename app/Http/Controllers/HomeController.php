@@ -146,7 +146,7 @@ class HomeController extends Controller
 }
 public function showLoginForm()
 {
-    return view('layouts.login'); // hoặc đường dẫn blade của em
+    return view('layouts.dangnhap'); // hoặc đường dẫn blade của em
 }
 public function login(Request $request)
     {
@@ -165,12 +165,9 @@ public function login(Request $request)
         }
 
         Auth::login($user, $request->has('remember'));
-
-        // nếu có pending buy-now, redirect về lại checkout
-        if ($data = session()->pull('pending_buy_now')) {
-            return redirect()->route('cart.buynow', $data);
-        }
-
+         if ($data = session()->pull('pending_buy_now')) {
+        return redirect()->route('cart.buynow', $data);
+    }
         // không có pending, fallback về intended (nếu bạn có dùng)
         return redirect()->intended('/');
     }

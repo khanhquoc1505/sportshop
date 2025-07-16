@@ -111,10 +111,9 @@ Route::patch('/profile/password', [CSThongTinController::class, 'changePassword'
 });
 ////////////////////////////////////////////////////////////////////////
 
-
 //////đăng nhập đăng ký quên mật khẩu
 Route::get('/dangnhap', [HomeController::class, 'showLoginForm'])->name('login');
-Route::post('/dangnhap', [HomeController::class, 'login'])->name('login');
+Route::post('/dangnhap', [HomeController::class, 'login'])->name('login.post');
 Route::post('/dang-xuat', [HomeController::class, 'logout'])->name('logout');
 // Không cần middleware đặc biệt, hoặc dùng 'guest' nếu chỉ cho user chưa đăng nhập
 Route::middleware('guest')->group(function(){
@@ -208,9 +207,9 @@ Route::get('layouts/timkiemSP', function () {
     return view('layouts/timkiemSP');
 });
 
-Route::get('/dangnhap', function () {
-    return view('layouts.dangnhap');
-});
+// Route::get('/dangnhap', function () {
+//     return view('layouts.dangnhap');
+// });
 // Route::get('/dangky', function () {
 //     return view('layouts.dangky');
 // });
