@@ -52,7 +52,7 @@
       <nav class="mt-6">
         <ul class="space-y-1">
           <li>
-            <a href="{{ route('admin.dashboard') }}" @class(['flex items-center px-4 py-2 hover:bg-gray-700', 'bg-gray-700 border-l-4 border-primary font-medium' => request()->routeIs('admin.users.*')])>
+            <a href="{{ route('admin.dashboard') }}" @class(['flex items-center px-4 py-2 hover:bg-gray-700', 'bg-gray-700 border-l-4 border-primary font-medium' => request()->routeIs('admin.dashboard*')])>
               <i class="fa-solid fa-home mr-3 w-5"></i>
               Dashboard
             </a>

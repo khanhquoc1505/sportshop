@@ -62,11 +62,12 @@
         </a>
 
         {{-- In báo cáo --}}
-        <a href="{{ route('admin.revenue.print', request()->all()) }}"
-           target="_blank"
-           class="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">
-          In báo cáo
-        </a>
+        <a href="{{ route('admin.revenue.print', request()->only([
+    'type','product','start_date','end_date'
+])) }}"
+   class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+  In báo cáo
+</a>
 
         {{-- Đặt lại --}}
         <a href="{{ route('admin.report.revenue') }}"

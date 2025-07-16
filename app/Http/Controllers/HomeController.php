@@ -148,36 +148,29 @@ class HomeController extends Controller
 public function login(Request $request)
 {
     $request->validate([
-        'login' => 'required',
+        'login'    => 'required',
         'mat_khau' => 'required|string',
     ]);
 
     $login_type = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'sdt';
 
-    // Tìm người dùng theo email hoặc sdt
     $nguoidung = NguoiDung::where($login_type, $request->login)->first();
     if (! $nguoidung) {
         return back()
             ->withErrors(['login' => 'Tài khoản không tồn tại'])
             ->withInput();
     }
-    if ($nguoidung->mat_khau !== $request->mat_khau) {
+
+    // DÙNG Hash::check() để so sánh plaintext với hash
+    if (! Hash::check($request->mat_khau, $nguoidung->mat_khau)) {
         return back()
             ->withErrors(['mat_khau' => 'Sai mật khẩu'])
             ->withInput();
     }
 
-    // So sánh mật khẩu đúng y như người dùng nhập (không mã hóa)
-    if ($nguoidung && $nguoidung->mat_khau === $request->mat_khau) {
-        // Ghi nhớ nếu người dùng chọn "remember"
-        auth()->login($nguoidung, $request->has('remember'));
+    auth()->login($nguoidung, $request->has('remember'));
 
-        return redirect()->route('layouts.chinh');
-    }
-
-    return back()->withErrors([
-        'login' => 'Sai thông tin đăng nhập',
-    ]);
+    return redirect()->route('layouts.chinh');
 }
 
 public function logout(Request $request)

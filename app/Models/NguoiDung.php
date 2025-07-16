@@ -4,14 +4,24 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Crypt;
 
 class NguoiDung extends Authenticatable
 {
+    use Notifiable;
     protected $table = 'nguoidung';
     protected $fillable = [
-        'ten_nguoi_dung','mat_khau','email','sdt','dia_chi','avatar','vai_tro','password_enc',
+        'ten_nguoi_dung',
+        'mat_khau',
+        'email',
+        'sdt',
+        'dia_chi',
+        'avatar',
+        'vai_tro',
+        'password_enc',
     ];
+    protected $primaryKey = 'id';
 
     public function nhapKho()
     {
@@ -38,28 +48,27 @@ class NguoiDung extends Authenticatable
         return $this->hasMany(YeuThich::class, 'nguoidung_id');
     }
     public function getAuthPassword()
-{
-    return $this->mat_khau;
-}
-public function getDecryptedPasswordAttribute()
-  {
-    try {
-      return Crypt::decryptString($this->password_enc);
-    } catch (\Exception $e) {
-      return null;
+    {
+        return $this->mat_khau;
     }
-  }
+    public function getDecryptedPasswordAttribute()
+    {
+        try {
+            return Crypt::decryptString($this->password_enc);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 
-  public function getAvatarUrlAttribute()
-{
-    return $this->avatar
-        ? asset($this->avatar)
-        : asset('images/avatar-placeholder.png');
-}
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar
+            ? asset($this->avatar)
+            : asset('images/avatar-placeholder.png');
+    }
 
-  public function member()
+    public function member()
     {
         return $this->hasOne(Member::class, 'user_id');
     }
-
 }
