@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ChiTietController;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\CTDonHangController;
 use App\Http\Controllers\AddGioHangController;
 use App\Http\Controllers\SupportChatController;
@@ -205,7 +206,7 @@ Route::get('/quenmatkhau', function () {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Route::prefix('admin')/* ->middleware(['auth', 'admin']) */->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->name('admin.')->group(function () {
     // Dashboard
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     // Quản lý sản phẩm

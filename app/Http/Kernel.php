@@ -42,14 +42,14 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
-
     /**
      * Các middleware có thể gán trên từng route nếu cần.
      */
+    
     protected $routeMiddleware = [
         'auth'       => \Illuminate\Auth\Middleware\Authenticate::class,
         'track.views'=> \App\Http\Middleware\TrackPageViews::class,
-        'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
         // … các middleware khác của bạn …
     ];
 }
