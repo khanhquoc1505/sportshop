@@ -17,6 +17,23 @@
             </script>
         @endpush
     @endif
+    {{-- Đây là phần thêm error-toast --}}
+    @if (session('error'))
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ session('error') }}',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                });
+            </script>
+        @endpush
+    @endif
     <h1 class="text-3xl font-semibold mb-6 text-dark">Quản Lý Danh Mục</h1>
 
     {{-- Search & Filter giống User --}}

@@ -85,15 +85,17 @@
 
             {{-- ---------- Loại sản phẩm (datalist) ---------- --}}
             <div>
-                <label class="block text-sm font-medium mb-1">Loại sản phẩm</label>
-                <input list="categories" name="category" value="{{ old('category') }}"
-                    class="w-full border px-3 py-2 rounded" placeholder="Chọn hoặc gõ loại mới">
-                <datalist id="categories">
-                    @foreach($dsLoai as $loai)
-                        <option value="{{ $loai }}">
-                    @endforeach
-                </datalist>
-            </div>
+  <label class="block text-sm font-medium mb-1">Loại sản phẩm</label>
+  <select name="loai_id" class="w-full border px-3 py-2 rounded">
+    <option value="">-- Chọn loại --</option>
+    @foreach($dsLoai as $loai)
+      <option value="{{ $loai->id }}" {{ old('loai_id')==$loai->id ? 'selected' : '' }}>
+        {{ $loai->loai }}
+      </option>
+    @endforeach
+  </select>
+  @error('loai_id')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+</div>
 
             {{-- ---------- Ngày nhập ---------- --}}
             <div>

@@ -146,7 +146,8 @@ class HomeController extends Controller
 }
 public function showLoginForm()
 {
-    return view('layouts.dangnhap'); // hoặc đường dẫn blade của em
+    return view('layouts.dangnhap'); 
+
 }
 public function login(Request $request)
     {

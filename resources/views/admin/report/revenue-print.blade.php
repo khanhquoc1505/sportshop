@@ -17,22 +17,25 @@
 <body onload="window.print()">
   <h2 style="text-align:center;">BÁO CÁO DOANH THU</h2>
   <table>
-    <thead>
+  <thead>
+    <tr>
+      <th>Date</th><th>Product</th><th>Quantity</th><th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    @forelse($reportData as $row)
       <tr>
-        @foreach(array_keys($reportData[0] ?? []) as $col)
-          <th>{{ $col }}</th>
-        @endforeach
+        <td>{{ $row['Date'] }}</td>
+        <td>{{ $row['Product'] }}</td>
+        <td>{{ $row['Quantity'] }}</td>
+        <td>{{ number_format($row['Total'],0,',','.') }} đ</td>
       </tr>
-    </thead>
-    <tbody>
-      @foreach($reportData as $row)
-        <tr>
-          @foreach($row as $val)
-            <td>{{ $val }}</td>
-          @endforeach
-        </tr>
-      @endforeach
-    </tbody>
-  </table>
+    @empty
+      <tr>
+        <td colspan="4" class="text-center py-4">Chưa có dữ liệu</td>
+      </tr>
+    @endforelse
+  </tbody>
+</table>
 </body>
 </html>

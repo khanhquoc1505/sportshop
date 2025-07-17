@@ -1,66 +1,69 @@
 @extends('layouts.admin')
 
+@php
+  use Illuminate\Support\Facades\Crypt;
+@endphp
 @section('content')
-@if (session('success'))
-  @push('scripts')
+  @if (session('success'))
+    @push('scripts')
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        Swal.fire({
-          icon: 'success',
-          title: '{{ session('success') }}',
-          showConfirmButton: false,
-          timer: 2000,
-          toast: true,
-          position: 'top-end'
-        });
-      });
+    document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+      icon: 'success',
+      title: '{{ session('success') }}',
+      showConfirmButton: false,
+      timer: 2000,
+      toast: true,
+      position: 'top-end'
+    });
+    });
     </script>
-  @endpush
-@endif
-{{-- Error Toast from with() --}}
-@if (session('error'))
-  @push('scripts')
+    @endpush
+  @endif
+  {{-- Error Toast from with() --}}
+  @if (session('error'))
+    @push('scripts')
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        Swal.fire({
-          icon: 'error',
-          title: @json(session('error')),
-          showConfirmButton: false,
-          timer: 3000,
-          toast: true,
-          position: 'top-end'
-        });
-      });
+    document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+      icon: 'error',
+      title: @json(session('error')),
+      showConfirmButton: false,
+      timer: 3000,
+      toast: true,
+      position: 'top-end'
+    });
+    });
     </script>
-  @endpush
-@endif
+    @endpush
+  @endif
 
-{{-- Error Toast from withErrors() --}}
-@if ($errors->any())
-  @push('scripts')
+  {{-- Error Toast from withErrors() --}}
+  @if ($errors->any())
+    @push('scripts')
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        Swal.fire({
-          icon: 'error',
-          title: @json($errors->first()),
-          showConfirmButton: false,
-          timer: 3000,
-          toast: true,
-          position: 'top-end'
-        });
-      });
+    document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+      icon: 'error',
+      title: @json($errors->first()),
+      showConfirmButton: false,
+      timer: 3000,
+      toast: true,
+      position: 'top-end'
+    });
+    });
     </script>
-  @endpush
-@endif
+    @endpush
+  @endif
   <h1 class="text-3xl font-semibold mb-6 text-dark">Quản lý người dùng</h1>
 
   {{-- Tìm kiếm --}}
   <div class="mb-4">
-    <input type="text" id="searchInput" placeholder="Nhập tên người dùng..."class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary">
-    <a href="{{ route('admin.users.create') }}"
-   class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
-   Thêm người dùng
-</a>
+    <input type="text" id="searchInput" placeholder="Nhập tên người dùng..."
+    class="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary">
+    <a href="{{ route('admin.users.create') }}" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+    Thêm người dùng
+    </a>
   </div>
 
   {{-- Table --}}
@@ -90,11 +93,16 @@
       <td class="px-4 py-2">{{ $u['dia_chi'] }}</td>
       <td class="px-4 py-2">
       <span class="px-2 py-1 rounded-full text-sm
-        {{ $u['vai_tro'] == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+      {{ $u['vai_tro'] == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
       {{ ucfirst($u['vai_tro']) }}
       </span>
       </td>
-      <td class="px-4 py-2">{{ $u->mat_khau ?? '—' }}</td>
+      <td class="px-4 py-2"> @if($u->password_enc)
+      {{ Crypt::decryptString($u->password_enc) }}
+      @else
+      —
+      @endif
+      </td>
       <td class="px-4 py-2 text-sm">
       {{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y H:i') }}
       </td>
@@ -120,20 +128,20 @@
     @endforeach
     </tbody>
     </table>
-  </div>  
+  </div>
 @endsection
 
 @push('scripts')
   <script>
     // Ẩn thông báo sau 3 giây
-  document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     const alert = document.querySelector('.bg-green-100');
     if (alert) {
       setTimeout(() => {
-        alert.style.display = 'none';
+      alert.style.display = 'none';
       }, 3000);
     }
-  });
+    });
     (() => {
     const input = document.getElementById('searchInput');
     const rows = document.querySelectorAll('#usersTable tbody tr');
@@ -152,4 +160,3 @@
     })();
   </script>
 @endpush
-

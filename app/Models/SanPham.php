@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Voucher;
+use Illuminate\Support\Str;
 use App\Models\Sanpham_Kichco_Mausac;
 use App\Models\BoMon;
 use App\Models\Loai;
@@ -181,5 +182,11 @@ class SanPham extends Model
         return $this->yeuThichs()
                     ->where('nguoidung_id', Auth::id())
                     ->exists();
+    }
+     protected static function booted()
+    {
+        static::creating(function ($sp) {
+            $sp->slug = Str::slug($sp->ten);
+        });
     }
 }

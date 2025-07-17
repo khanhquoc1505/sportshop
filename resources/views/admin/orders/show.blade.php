@@ -20,9 +20,8 @@
       ← Quay lại
     </a>
   </div>
-
+<div id="printable-order">
   <div class="space-y-6">
-
     {{-- 3. Header Thông tin chung --}}
     <div class="bg-white border border-gray-200 rounded-lg shadow p-6">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -158,7 +157,7 @@
                     class="w-full px-3 py-2 border rounded focus:ring-primary"
                     placeholder="Nhập ghi chú...">{{ old('notes', $order['notes'] ?? '') }}</textarea>
           <button type="submit"
-                  class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">
+                  class="mt-2 px-4 py-2 bg-blue-600 text-white rounded no-print">
             Cập nhật
           </button>
         </form>
@@ -205,7 +204,7 @@
     {{-- … --}}
 
     {{-- 7. Nút In --}}
-    <div class="flex justify-end pt-4">
+    <div class="flex justify-end pt-4 no-print">
       <button onclick="window.print()"
               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
         In đơn hàng
@@ -230,5 +229,29 @@
     @endif
     </div>
   </div>
-  
+
+<style>
+  @media print {
+    /* Ẩn hết mọi thứ trước */
+    body * {
+      visibility: hidden;
+    }
+    /* Chỉ hiện phần #printable-order */
+    #printable-order, 
+    #printable-order * {
+      visibility: visible;
+    }
+    /* Đặt nó lên góc trên cùng */
+    #printable-order {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+    /* Ẩn những vùng gắn class no-print */
+    .no-print {
+      display: none !important;
+    }
+  }
+</style>
 @endsection
