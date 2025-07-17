@@ -93,16 +93,13 @@
       <td class="px-4 py-2">{{ $u['dia_chi'] }}</td>
       <td class="px-4 py-2">
       <span class="px-2 py-1 rounded-full text-sm
-      {{ $u['vai_tro'] == 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+      {{ $u->vai_tro === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
       {{ ucfirst($u['vai_tro']) }}
       </span>
       </td>
-      <td class="px-4 py-2"> @if($u->password_enc)
-      {{ Crypt::decryptString($u->password_enc) }}
-      @else
-      —
-      @endif
-      </td>
+      <td class="px-4 py-2">
+  {{ $u->mat_khau ?? '—' }}
+</td>
       <td class="px-4 py-2 text-sm">
       {{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y H:i') }}
       </td>

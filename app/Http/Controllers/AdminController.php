@@ -536,11 +536,9 @@ class AdminController extends Controller
         $user->vai_tro = $data['vai_tro'];
 
         if (!empty($data['mat_khau'])) {
-            // Hash mật khẩu mới
-            $user->mat_khau = Hash::make($data['mat_khau']);
-            // (tuỳ chọn) lưu reversible-encryption chỉ để hiển thị
-            $user->password_enc = Crypt::encryptString($data['mat_khau']);
-        }
+        // Gán trực tiếp mật khẩu mới
+        $user->mat_khau = $data['mat_khau'];
+    }
 
         $user->save();
 
@@ -1131,12 +1129,6 @@ $end   = Carbon::parse($request->end_date)  ->endOfDay();
         'ten_nguoi_dung.unique' => 'Tên người dùng đã tồn tại, hãy nhập tên khác.',
         'email.unique'          => 'Email đã được sử dụng, hãy chọn email khác.',
     ]);
-
-    // 1) Hash mật khẩu một chiều
-    $data['mat_khau']     = Hash::make($data['mat_khau']);
-
-    // 2) Encrypt reversible để hiển thị lại nếu cần
-    $data['password_enc'] = Crypt::encryptString($request->mat_khau);
 
     // 3) Tạo user (nhớ thêm 'password_enc' vào $fillable của model)
     NguoiDung::create($data);

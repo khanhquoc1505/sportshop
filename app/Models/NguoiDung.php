@@ -19,7 +19,6 @@ class NguoiDung extends Authenticatable
         'dia_chi',
         'avatar',
         'vai_tro',
-        'password_enc',
     ];
     protected $primaryKey = 'id';
 
@@ -50,14 +49,6 @@ class NguoiDung extends Authenticatable
     public function getAuthPassword()
     {
         return $this->mat_khau;
-    }
-    public function getDecryptedPasswordAttribute()
-    {
-        try {
-            return Crypt::decryptString($this->password_enc);
-        } catch (\Exception $e) {
-            return null;
-        }
     }
 
     public function getAvatarUrlAttribute()

@@ -171,8 +171,6 @@ Route::middleware('auth')->group(function(){
 
      Route::post('/nguoidung/update-address', [App\Http\Controllers\AddGioHangController::class, 'updateAddress'])
     ->name('nguoidung.update_address');
-   
-    
 });
 // chi tiết đon hàng
 Route::post('/danh-gia', [CTDonHangController::class, 'store'])

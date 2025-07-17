@@ -146,32 +146,28 @@ class HomeController extends Controller
 }
 
 public function login(Request $request)
-{
-    $request->validate([
-        'login'    => 'required',
-        'mat_khau' => 'required|string',
-    ]);
+    {
+        $request->validate([
+            'login'    => 'required',
+            'mat_khau' => 'required|string',
+        ]);
 
-    $login_type = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'sdt';
+        $field = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'sdt';
+        $user  = NguoiDung::where($field, $request->login)->first();
 
-    $nguoidung = NguoiDung::where($login_type, $request->login)->first();
-    if (! $nguoidung) {
-        return back()
-            ->withErrors(['login' => 'Tài khoản không tồn tại'])
-            ->withInput();
+        if (! $user || $user->mat_khau !== $request->mat_khau) {
+            return back()
+                ->withErrors(['login'=>'Email/SĐT hoặc mật khẩu không đúng'])
+                ->withInput();
+        }
+
+        Auth::login($user, $request->has('remember'));
+         if ($data = session()->pull('pending_buy_now')) {
+        return redirect()->route('cart.buynow', $data);
     }
-
-    // DÙNG Hash::check() để so sánh plaintext với hash
-    if (! Hash::check($request->mat_khau, $nguoidung->mat_khau)) {
-        return back()
-            ->withErrors(['mat_khau' => 'Sai mật khẩu'])
-            ->withInput();
+        // không có pending, fallback về intended (nếu bạn có dùng)
+        return redirect()->intended('/');
     }
-
-    auth()->login($nguoidung, $request->has('remember'));
-
-    return redirect()->route('layouts.chinh');
-}
 
 public function logout(Request $request)
 {
