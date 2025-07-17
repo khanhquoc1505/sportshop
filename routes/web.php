@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ChiTietController;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\CTDonHangController;
 use App\Http\Controllers\AddGioHangController;
 use App\Http\Controllers\SupportChatController;
@@ -16,6 +17,8 @@ use App\Models\BoMon;
 
 
 //////////////
+Route::post('/support/ask', [SupportChatController::class, 'ask'])
+     ->name('support.ask');
 //Route::get('/san-pham/tim-kiem', [TiemKiemController::class, 'search'])->name('product.search');
 Route::get('/product/search', [TiemKiemController::class, 'search'])->name('product.search');
 Route::get('/product/autocomplete', [TiemKiemController::class, 'autocomplete'])->name('product.autocomplete');
@@ -172,19 +175,12 @@ Route::middleware('auth')->group(function(){
      Route::post('giohang/remove/{id}',[AddGioHangController::class,'remove'])->whereNumber('id')
           ->name('cart.remove');
         
-    // // Thanh toán
-// POST xử lý tăng/giảm/xoá trong luồng “mua ngay”
-    
-    // Xử lý + / – / remove / chọn-voucher của “mua ngay”
-    
+    // // Thanh toán    
     // Xử lý đặt hàng (COD hoặc VNPay)
     Route::post('/giohang/thanhtoan', [AddGioHangController::class, 'thanhtoan'])
          ->name('cart.thanhtoan');
-
      Route::post('/nguoidung/update-address', [App\Http\Controllers\AddGioHangController::class, 'updateAddress'])
     ->name('nguoidung.update_address');
-   
-    
 });
 // chi tiết đon hàng
 Route::post('/danh-gia', [CTDonHangController::class, 'store'])
@@ -197,7 +193,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/vnpay_payment', [AddGioHangController::class, 'vnpay_payment'])
          ->name('vnpay.payment');
 });
-
 // Route callback VNPAY về (GET), vẫn có session vì thuộc web.php, nhưng không yêu cầu login
 Route::get('/vnpay_return', [AddGioHangController::class, 'vnpayReturn'])
      ->name('vnpay.return');
@@ -219,7 +214,8 @@ Route::get('/quenmatkhau', function () {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->name('admin.')->group(function () {
+
     // Dashboard
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     // Quản lý sản phẩm

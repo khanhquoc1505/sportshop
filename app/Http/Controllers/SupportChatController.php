@@ -8,6 +8,7 @@ use App\Services\ChatService;
 use App\Models\SanPham;
 use App\Models\BoMon;
 use App\Models\GioiTinh;
+use Illuminate\Support\Str;
 
 class SupportChatController extends Controller
 {
